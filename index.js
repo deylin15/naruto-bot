@@ -15,7 +15,7 @@ const { say } = cfonts;
 const rl = createInterface(process.stdin, process.stdout);
 
 function verify() {
-  const dirs = ['tmp', 'Sesiones/Subbots', 'Sesiones/Principal'];
+  const dirs = ['tmp', 'Sesiones/Principal'];
   for (const dir of dirs) {
     if (typeof dir === 'string' && dir.trim() !== '') {
       if (!existsSync(dir)) {
@@ -28,12 +28,12 @@ function verify() {
 }
 verify();
 
-say('sᥲsᥙkᥱ ᑲ᥆𝗍', {
+say('Pixelap', {
   font: 'chrome',
   align: 'center',
   colors: ['white']
 });
-say(`Developed By • sᥲsᥙkᥱ ᑲ᥆𝗍 mძ`, {
+say(`Developed By • Pixelap`, {
   font: 'console',
   align: 'center',
   colors: ['magenta']
