@@ -140,7 +140,7 @@ export async function handler(chatUpdate) {
         } catch (e) {
             console.error(e)
         }
-        // Tesis estuvo aquí 🤤
+        
        const mainBot = global?.conn?.user?.jid
        const chat = global.db.data.chats[m.chat] || {}
        const isSubbs = chat.antiLag === true
@@ -149,7 +149,7 @@ export async function handler(chatUpdate) {
        const isAllowed = allowedBots.includes(this?.user?.jid)
        if (isSubbs && !isAllowed) 
             return
-        // --
+        
         if (opts['nyimak'])  return
         if (!m.fromMe && opts['self'])  return
         if (opts['swonly'] && m.chat !== 'status@broadcast')  return
@@ -158,11 +158,11 @@ export async function handler(chatUpdate) {
 
 
         let _user = global.db.data && global.db.data.users && global.db.data.users[m.sender]
-        //- Tesis estuvo aquí 🙀🙀
+        
         const sendNum = m?.sender?.replace(/[^0-9]/g, '')
         const isROwner = [conn.decodeJid(global.conn?.user?.id), ...global.owner?.map(([number]) => number)].map(v => (v || '').replace(/[^0-9]/g, '')).includes(sendNum)
 
-// WillZek Estuvo Aqui 💙
+
 const botIds = [
   this?.decodeJid?.(this?.user?.id),
   ...(global.owner?.map(([n]) => n) || [])
@@ -172,7 +172,7 @@ const isPremSubs = botIds.includes(sendNum) ||
   (global.conns || []).some(conn =>
     conn?.user?.jid?.replace(/[^0-9]/g, '') === sendNum &&
     conn?.ws?.socket?.readyState !== 3
-  ) // 💙
+  ) 
         const isOwner = isROwner || m.fromMe
         const isMods = isOwner || global.mods.map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(m.sender)
         const isPrems = isROwner || global.prems.map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(m.sender) || _user.prem == true
@@ -195,7 +195,7 @@ const isPremSubs = botIds.includes(sendNum) ||
 
 const groupMetadata = (m.isGroup ? ((conn.chats[m.chat] || {}).metadata || await this.groupMetadata(m.chat).catch(_ => null)) : {}) || {}
 const participants = (m.isGroup ? groupMetadata.participants : []) || []
-//- Matías es mi novia (Tesis) 🥺       
+
 const normalizeJid = jid => jid?.replace(/[^0-9]/g, '')
 const cleanJid = jid => jid?.split(':')[0] || ''
 const senderNum = normalizeJid(m.sender)
@@ -276,7 +276,7 @@ conn: this,
                 let [command, ...args] = noPrefix.trim().split` `.filter(v => v)
                 args = args || []
                 let _args = noPrefix.trim().split` `.slice(1)
-// Tesis estuvo aquí 🙀
+
                 let text = _args.join` `  
 command = (command || '').toLowerCase()  
 const gruposPermitidos = [
@@ -477,19 +477,19 @@ if (gruposPermitidos.includes(m.chat) &&!comandosPermitidos.includes(command)) {
 }
 
 global.dfail = (type, m, conn, usedPrefix) => {
-    let msg = {
-        rowner: " |𝐀𝐯𝐢𝐬𝐨| `𝐋𝐨 𝐬𝐢𝐞𝐧𝐭𝐨 𝐞𝐬𝐭𝐞 𝐜𝐨𝐦𝐚𝐧𝐝𝐨 𝐬𝐨𝐥𝐨 𝐞𝐬 𝐩𝐚𝐫𝐚 𝐦𝐢 𝐜𝐫𝐞𝐚𝐝𝐨𝐫`🚫",
-        owner: " _ |𝐀𝐯𝐢𝐬𝐨| *`😴 𝙋𝙚𝙧𝙙𝙤𝙣 𝙨𝙤𝙡𝙤 𝙢𝙞𝙨 𝙘𝙧𝙚𝙖𝙙𝙤𝙧𝙚𝙨 𝙥𝙪𝙚𝙙𝙚𝙣 𝙪𝙨𝙖𝙧𝙡𝙤😴.`*_",
-        mods: " _*|𝐀𝐯𝐢𝐬𝐨| `⚡ 𝐄𝐡 𝐥𝐨 𝐬𝐢𝐞𝐧𝐭𝐨 𝐞𝐬𝐭𝐨 𝐬𝐨𝐥𝐨 𝐞𝐬 𝐩𝐚𝐫𝐚 𝐥𝐨𝐬 𝐦𝐨𝐝𝐬⚡`*_",
-        premium: " |𝐀𝐯𝐢𝐬𝐨| *`🔑 𝐍𝐎 𝐄𝐑𝐄𝐒 𝐔𝐒𝐔𝐀𝐑𝐈𝐎 𝐏𝐑𝐄𝐌𝐈𝐔𝐌 𝐇𝐀𝐁𝐋𝐀 𝐂𝐎𝐍 𝐌𝐈 𝐂𝐑𝐄𝐀𝐃𝐎𝐑⚡`*_",
-        premsubs: '《★》Esta función solo puede ser usada por subbots premiums.', 
-        group: " |𝐀𝐯𝐢𝐬𝐨|  _*`↘️ 𝐄𝐒𝐓𝐄 𝐂𝐎𝐌𝐀𝐍𝐃𝐎́ 𝐒𝐎𝐋𝐎 𝐅𝐔𝐍𝐂𝐈𝐎𝐍𝐀 𝐄𝐍 𝐆𝐑𝐔𝐏𝐎𝐒⚡`*_",
-        private: " |𝐀𝐯𝐢𝐬𝐨|  _*`💬 𝐔𝐒𝐀 𝐄𝐋 𝐂𝐇𝐀𝐓 𝐏𝐑𝐈𝐕𝐀𝐃𝐎 𝐏𝐀𝐑𝐀 𝐄𝐒𝐓𝐄 𝐂𝐎𝐌𝐀𝐍𝐃𝐎⚡`*_",
-        admin: "  |𝐀𝐯𝐢𝐬𝐨| _*`😂 𝐓𝐔 𝐍𝐎 𝐄𝐑𝐄𝐒 𝐀𝐃𝐌𝐈𝐍 😝⚡`*_",
-        botAdmin: "  |𝐀𝐯𝐢𝐬𝐨| _*`⚠️ 𝗘𝘀 𝗻𝗲𝗰𝗲𝘀𝗮𝗿𝗶𝗼 𝗤𝘂𝗲 𝗦𝗲𝗮 𝗮𝗱𝗺𝗶𝗻 𝗣𝗥𝗜𝗠𝗘𝗥𝗢 𝗣𝗔𝗥𝗔 𝘂𝘀𝗮𝗿 𝗲𝘀𝘁𝗮 𝗳𝘂𝗻𝗰𝗶𝗼́𝗻⚡`*_",
-        unreg: " | 𝐀𝐯𝐢𝐬𝐨| *`↘️𝙐𝙎𝙐𝘼𝙍𝙄𝙊 𝙉𝙊 𝙍𝙀𝙂𝙄𝙎𝙏𝙍𝘼𝘿𝙊↘️`*_\n\n`Para Registrarse:`\n\n> .reg nombre.edad\n\n`Ejemplo:`\n\n> .reg Barboza.18",
-        restrict: "> _*`Comando desactivado por mi Owner`*_" 
-    }[type]
+    const msg = {
+        rowner: "👑 *Comando exclusivo del Creador Principal de Pixelap.*",
+        owner: "🧰 *Este comando solo está disponible para desarrolladores de Pixelap.*",
+        mods: "🧩 *Este comando solo puede ser usado por moderadores autorizados.*",
+        premium: "💎 *Este comando es solo para usuarios Premium.*\nSolicita acceso a través del equipo Pixelap.",
+        premsubs: "📡 *Función habilitada únicamente para instancias premium.*",
+        group: "👥 *Este comando solo funciona en grupos.*",
+        private: "💬 *Este comando solo funciona en el chat privado.*",
+        admin: "🔐 *Solo administradores del grupo pueden usar este comando.*",
+        botAdmin: "🤖 *El bot necesita permisos de administrador para ejecutar esta acción.*",
+        unreg: `📛 *Usuario no registrado en Pixelap.*\n\n🔰 *Para registrarte:* \n> .reg TuNombre.Edad\n\n📌 *Ejemplo:*\n> .reg Pixelap.18`,
+        restrict: "🚫 *Este comando ha sido restringido por el administrador del sistema.*"
+    }[type];
     if (msg) return conn.reply(m.chat, msg, m, rcanal).then(_ => m.react('✖️'))
 }
 
