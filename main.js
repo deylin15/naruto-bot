@@ -217,9 +217,7 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
   conn.ev.once('connection.update', async ({ connection }) => {
     if (connection === 'open') {
       try {
-        // Esperar 3 segundos para asegurar conexión
         await new Promise(resolve => setTimeout(resolve, 3000))
-
         let code = await conn.requestPairingCode(addNumber)
         code = code?.match(/.{1,4}/g)?.join('-') || code
 
