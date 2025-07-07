@@ -388,46 +388,43 @@ async function filesInit() {
 filesInit().then(() => Object.keys(global.plugins)).catch(console.error)
 
 global.reload = async (_ev, filename) => {
-  if (pluginFilter(filename)) {
-    const dir = global.__filename(join(pluginFolder, filename), true)
-    if (filename in global.plugins) {
-      if (existsSync(dir)) {
-        conn.logger.info(`✅ Plugin actualizado: '${filename}'`)
-      } else {
-        conn.logger.warn(`🗑 Plugin eliminado: '${filename}'`)
-        return delete global.plugins[filename]
-      }
-    } else {
-      conn.logger.info(`🆕 Nuevo plugin detectado: '${filename}'`)
-    }
+  if (!pluginFilter(filename)) return
 
-    const err = syntaxerror(readFileSync(dir), filename, {
-      sourceType: 'module',
-      allowAwaitOutsideFunction: true
-    })
+  const dir = global.__filename(join(pluginFolder, filename), true)
 
-    if (err) {
-      conn.logger.error(`🛑 Error de sintaxis en '${filename}':\n${format(err)}`)
+  if (filename in global.plugins) {
+    if (!existsSync(dir)) {
+      conn.logger.warn(`🗑 Plugin eliminado: '${filename}'`)
+      return delete global.plugins[filename]
     } else {
-      try {
-        const module = await import(`${pathToFileURL(dir)}?update=${Date.now()}`)
-        global.plugins[filename] = module.default || module
-      } catch (e) {
-        conn.logger.error(`❌ Error al recargar plugin '${filename}':`, e)
-      }
+      conn.logger.info(`✅ Plugin actualizado: '${filename}'`)
     }
+  } else {
+    conn.logger.info(`🆕 Nuevo plugin detectado: '${filename}'`)
   }
-} else {
+
+  const err = syntaxerror(readFileSync(dir), filename, {
+    sourceType: 'module',
+    allowAwaitOutsideFunction: true
+  })
+
+  if (err) {
+    conn.logger.error(`🛑 Error de sintaxis en '${filename}':\n${format(err)}`)
+    return
+  }
+
   try {
-    const module = await import(`${global.__filename(dir)}?update=${Date.now()}`);
-    global.plugins[filename] = module.default || module;
+    const module = await import(`${pathToFileURL(dir)}?update=${Date.now()}`)
+    global.plugins[filename] = module.default || module
   } catch (e) {
-    conn.logger.error(`❌ ERROR EN EL PLUGIN '${filename}'\n${format(e)}`);
+    conn.logger.error(`❌ Error al recargar plugin '${filename}':\n${format(e)}`)
   } finally {
-    global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)));
+    // Ordena plugins por nombre
+    global.plugins = Object.fromEntries(
+      Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b))
+    )
   }
 }
-};
 
 Object.freeze(global.reload);
 watch(pluginFolder, global.reload);
