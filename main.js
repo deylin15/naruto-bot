@@ -222,94 +222,100 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
       addNumber = phoneNumber.replace(/\D/g, '')
     }
 
-    // Solicitar código de emparejamiento
     setTimeout(async () => {
-      let code = await conn.requestPairingCode(addNumber)
-      code = code?.match(/.{1,4}/g)?.join('-') || code
-      console.log(chalk.bold.bgMagenta.white(' CÓDIGO DE EMPAREJAMIENTO: '), chalk.bold.white(code))
-    }, 2000)
-  }
+  let code = await conn.requestPairingCode(addNumber)
+  code = code?.match(/.{1,4}/g)?.join('-') || code
+  console.log(chalk.bold.bgMagenta.white(' CÓDIGO DE EMPAREJAMIENTO: '), chalk.bold.white(code))
+}, 2000)
 }
 
 conn.isInit = false
 conn.well = false
 
 if (!opts['test']) {
-if (global.db) setInterval(async () => {
-if (global.db.data) await global.db.write()
-if (opts['autocleartmp'] && (global.support || {}).find) (tmp = [os.tmpdir(), 'tmp', "YukiJadiBot"], tmp.forEach(filename => cp.spawn('find', [filename, '-amin', '2', '-type', 'f', '-delete'])))}, 30 * 1000)}
-if (opts['server']) (await import('./server.js')).default(global.conn, PORT)
+  if (global.db) setInterval(async () => {
+    if (global.db.data) await global.db.write()
+  }, 30 * 1000)
+}
+
+if (opts['server']) {
+  (await import('./server.js')).default(global.conn, PORT)
+}
+
 async function getMessage(key) {
-if (store) {
-} return {
-conversation: 'SimpleBot',
-}}
-async function connectionUpdate(update) {  
-const {connection, lastDisconnect, isNewLogin} = update
-global.stopped = connection
-if (isNewLogin) conn.isInit = true
-const code = lastDisconnect?.error?.output?.statusCode || lastDisconnect?.error?.output?.payload?.statusCode
-if (code && code !== DisconnectReason.loggedOut && conn?.ws.socket == null) {
-await global.reloadHandler(true).catch(console.error)
-
-global.timestamp.connect = new Date
-}
-if (global.db.data == null) loadDatabase()
-if (update.qr != 0 && update.qr != undefined || methodCodeQR) {
-if (opcion == '1' || methodCodeQR) {
-console.log(chalk.bold.yellow(`\n🌸 ESCANEA EL CÓDIGO QR EXPIRA EN 45 SEGUNDOS`))}
-}
-if (connection == 'open') {
-console.log(chalk.bold.greenBright(`\n❒⸺⸺⸺⸺【• CONECTADO •】⸺⸺⸺⸺❒\n│\n│ 🟢 Se ha conectado con WhatsApp exitosamente.\n│\n❒⸺⸺⸺⸺【• CONECTADO •】⸺⸺⸺⸺❒`))}
-let reason = new Boom(lastDisconnect?.error)?.output?.statusCode
-if (connection === 'close') {
-if (reason === DisconnectReason.badSession) {
-console.log(chalk.bold.cyanBright("⚠️ SIN CONEXIÓN, BORRE LA CARPETA ${global.authFile} Y ESCANEA EL CÓDIGO QR ⚠️"))
-} else if (reason === DisconnectReason.connectionClosed) {
-console.log(chalk.bold.magentaBright("╭┄┄┄┄┄┄┄┄┄┄┄┄┄┄ • • • ┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ☹\n┆ ⚠️ CONEXION CERRADA, RECONECTANDO....\n╰┄┄┄┄┄┄┄┄┄┄┄┄┄┄ • • • ┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ☹"))
-await global.reloadHandler(true).catch(console.error)
-} else if (reason === DisconnectReason.connectionLost) {
-console.log(chalk.bold.blueBright(`\n╭┄┄┄┄┄┄┄┄┄┄┄┄┄┄ • • • ┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ☂\n┆ ⚠️ CONEXIÓN PERDIDA CON EL SERVIDOR, RECONECTANDO....\n╰┄┄┄┄┄┄┄┄┄┄┄┄┄┄ • • • ┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ☂`))
-await global.reloadHandler(true).catch(console.error)
-} else if (reason === DisconnectReason.connectionReplaced) {
-console.log(chalk.bold.yellowBright("╭┄┄┄┄┄┄┄┄┄┄┄┄┄┄ • • • ┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ✗\n┆ ⚠️ CONEXIÓN REEMPLAZADA, SE HA ABIERTO OTRA NUEVA SESION, POR FAVOR, CIERRA LA SESIÓN ACTUAL PRIMERO.\n╰┄┄┄┄┄┄┄┄┄┄┄┄┄┄ • • • ┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ✗"))
-} else if (reason === DisconnectReason.loggedOut) {
-console.log(chalk.bold.redBright(`\n⚠️ SIN CONEXIÓN, BORRE LA CARPETA ${global.authFile} Y ESCANEA EL CÓDIGO QR ⚠️`))
-await global.reloadHandler(true).catch(console.error)
-} else if (reason === DisconnectReason.restartRequired) {
-console.log(chalk.bold.cyanBright(`\n╭┄┄┄┄┄┄┄┄┄┄┄┄┄┄ • • • ┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ✓\n┆ ❇️ CONECTANDO AL SERVIDOR...\n╰┄┄┄┄┄┄┄┄┄┄┄┄┄┄ • • • ┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ✓`))
-await global.reloadHandler(true).catch(console.error)
-} else if (reason === DisconnectReason.timedOut) {
-console.log(chalk.bold.yellowBright(`\n╭┄┄┄┄┄┄┄┄┄┄┄┄┄┄ • • • ┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ▸\n┆ ⌛ TIEMPO DE CONEXIÓN AGOTADO, RECONECTANDO....\n╰┄┄┄┄┄┄┄┄┄┄┄┄┄┄ • • • ┄┄┄┄┄┄┄┄┄┄┄┄┄┄ ▸`))
-await global.reloadHandler(true).catch(console.error) //process.send('reset')
-} else {
-console.log(chalk.bold.redBright(`\n⚠️❗ RAZON DE DESCONEXIÓN DESCONOCIDA: ${reason || 'No encontrado'} >> ${connection || 'No encontrado'}`))
-}}
-}
-process.on('uncaughtException', console.error);
-
-async function connectSubBots() {
-const subBotDirectory = './YukiJadiBot';
-if (!existsSync(subBotDirectory)) {
-console.log('🌹 Yuki_Suou-Bot no tiene Sub-Bots vinculados.');
-return;
+  if (store) {
+    const jid = jidNormalizedUser(key.remoteJid)
+    const msg = await store.loadMessage(jid, key.id)
+    return msg?.message || ""
+  }
+  return { conversation: 'Naruto-Bot' }
 }
 
-const subBotFolders = readdirSync(subBotDirectory).filter(file => 
-statSync(join(subBotDirectory, file)).isDirectory()
-);
+async function connectionUpdate(update) {
+  const { connection, lastDisconnect, isNewLogin } = update
+  global.stopped = connection
+  if (isNewLogin) conn.isInit = true
 
-const botPromises = subBotFolders.map(async folder => {
-const authFile = join(subBotDirectory, folder);
-if (existsSync(join(authFile, 'creds.json'))) {
-return await connectionUpdate(authFile);
-}
-});
+  const code = lastDisconnect?.error?.output?.statusCode || lastDisconnect?.error?.output?.payload?.statusCode
+  if (code && code !== DisconnectReason.loggedOut && conn?.ws.socket == null) {
+    await global.reloadHandler(true).catch(console.error)
+    global.timestamp.connect = new Date()
+  }
 
-const bots = await Promise.all(botPromises);
-global.conns = bots.filter(Boolean);
-console.log(chalk.bold.greenBright(`🥀 Todos los Sub-Bots se conectaron con éxito.`))
+  if (global.db.data == null) loadDatabase()
+
+  if ((update.qr != 0 && update.qr !== undefined) || methodCodeQR) {
+    if (opcion == '1' || methodCodeQR) {
+      console.log(chalk.bold.yellow('\n🌸 ESCANEA EL CÓDIGO QR — EXPIRA EN 45 SEGUNDOS'))
+    }
+  }
+
+  if (connection == 'open') {
+    console.log(chalk.bold.greenBright(`
+❒⸺⸺⸺⸺【• CONECTADO •】⸺⸺⸺⸺❒
+│
+│ 🟢 Se ha conectado con WhatsApp exitosamente.
+│
+❒⸺⸺⸺⸺【• CONECTADO •】⸺⸺⸺⸺❒`))
+  }
+
+  let reason = new Boom(lastDisconnect?.error)?.output?.statusCode
+  if (connection === 'close') {
+    switch (reason) {
+      case DisconnectReason.badSession:
+        console.log(chalk.bold.cyanBright(`⚠️ SIN CONEXIÓN — BORRA LA CARPETA '${global.authFile}' Y ESCANEA DE NUEVO.`))
+        break
+      case DisconnectReason.connectionClosed:
+        console.log(chalk.bold.magentaBright(`⚠️ CONEXIÓN CERRADA — REINTENTANDO...`))
+        await global.reloadHandler(true).catch(console.error)
+        break
+      case DisconnectReason.connectionLost:
+        console.log(chalk.bold.blueBright(`⚠️ CONEXIÓN PERDIDA CON EL SERVIDOR — REINTENTANDO...`))
+        await global.reloadHandler(true).catch(console.error)
+        break
+      case DisconnectReason.connectionReplaced:
+        console.log(chalk.bold.yellowBright(`⚠️ SESIÓN REEMPLAZADA — SE ABRIÓ OTRA SESIÓN.`))
+        break
+      case DisconnectReason.loggedOut:
+        console.log(chalk.bold.redBright(`⚠️ SIN CONEXIÓN — BORRA LA CARPETA '${global.authFile}' Y ESCANEA DE NUEVO.`))
+        await global.reloadHandler(true).catch(console.error)
+        break
+      case DisconnectReason.restartRequired:
+        console.log(chalk.bold.cyanBright(`❇️ CONECTANDO AL SERVIDOR...`))
+        await global.reloadHandler(true).catch(console.error)
+        break
+      case DisconnectReason.timedOut:
+        console.log(chalk.bold.yellowBright(`⌛ TIEMPO AGOTADO — REINTENTANDO CONEXIÓN...`))
+        await global.reloadHandler(true).catch(console.error)
+        break
+      default:
+        console.log(chalk.bold.redBright(`⚠️ DESCONEXIÓN DESCONOCIDA: ${reason || 'No encontrado'} >> ${connection || 'No encontrado'}`))
+        break
+    }
+  }
 }
+
+process.on('uncaughtException', console.error)
 
 (async () => {
 global.conns = [];
