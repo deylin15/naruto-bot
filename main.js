@@ -193,25 +193,31 @@ async function connectionUpdate(update) {
 }
 
 let handler = await import('./handler.js')
+
 global.reloadHandler = async function (restartConn) {
   try {
     const newHandler = await import(`./handler.js?update=${Date.now()}`)
-    if (newHandler && Object.keys(newHandler).length) handler = newHandler
+    if (newHandler && typeof newHandler.default === 'function') {
+      handler = newHandler
+    } else {
+      console.error('❌ handler.js no exporta una función por defecto válida.')
+      return
+    }
   } catch (e) {
-    console.error(e)
+    console.error('❌ Error al recargar el handler:', e)
   }
 
   if (restartConn) {
-  const oldChats = global.conn.chats
-  try { global.conn.ws.close() } catch {}
-  conn.ev.removeAllListeners() // <- Borra anteriores
-  global.conn = makeWASocket(connectionOptions, { chats: oldChats })
-}
+    const oldChats = global.conn.chats
+    try { global.conn.ws.close() } catch {}
+    conn.ev.removeAllListeners()
+    global.conn = makeWASocket(connectionOptions, { chats: oldChats })
+  }
 
-conn.ev.removeAllListeners() // <- Asegura que no haya duplicados
-conn.ev.on('messages.upsert', handler.default || handler)
-conn.ev.on('connection.update', connectionUpdate)
-conn.ev.on('creds.update', saveState)
+  conn.ev.removeAllListeners()
+  conn.ev.on('messages.upsert', handler.default)
+  conn.ev.on('connection.update', connectionUpdate)
+  conn.ev.on('creds.update', saveState)
 }
 await global.reloadHandler()
 
