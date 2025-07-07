@@ -208,27 +208,20 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
         phoneNumber = phoneNumber.replace(/\D/g, '')
         if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
       } while (!await isValidPhoneNumber(phoneNumber))
+      rl.close()
       addNumber = phoneNumber.replace(/\D/g, '')
     }
 
-    rl.close()
-
-    const esperarConexion = () => new Promise(resolve => {
-      conn.ev.on('connection.update', async ({ connection }) => {
-        if (connection === 'open') {
-          resolve()
-        }
-      })
-    })
-
     try {
-      console.log(chalk.bold.yellow(`⌛ Esperando conexión con WhatsApp...`))
-      await esperarConexion()
+      console.log(chalk.bold.yellow(`⌛ Conectando con WhatsApp...`))
+      await new Promise(resolve => setTimeout(resolve, 3000)) // Esperar 3 segundos
 
       let codeBot = await conn.requestPairingCode(`+${addNumber}`)
       codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
+
       console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN`)), chalk.white(codeBot))
       console.log(chalk.yellowBright('📲 Revisa tu WhatsApp, debe llegarte la notificación de emparejamiento.'))
+
     } catch (e) {
       console.error(chalk.redBright('❌ Error al generar el código de emparejamiento:'), e)
     }
