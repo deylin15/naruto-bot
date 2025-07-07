@@ -1,3 +1,3 @@
 # Naruto-bot 
 
-[g](config.js)
+[config ⭐](config.js)
