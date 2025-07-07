@@ -214,22 +214,25 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
 
     console.log(chalk.yellow(`⏳ Conectando con WhatsApp...`))
 
-    conn.ev.on('connection.update', async ({ connection }) => {
+    conn.ev.once('connection.update', async ({ connection }) => {
       if (connection === 'open') {
         console.log(chalk.greenBright('✅ Conexión establecida con WhatsApp'))
 
-        setTimeout(async () => {
-          try {
-            let codeBot = await conn.requestPairingCode(addNumber)
-            codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
-            console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN `)), chalk.bold.white(chalk.white(codeBot)))
-            console.log(chalk.yellowBright('📲 Revisa tu WhatsApp, debe llegarte la notificación de emparejamiento.'))
-          } catch (e) {
-            console.error(chalk.redBright('❌ Error al generar el código de emparejamiento:'), e)
-          }
-        }, 3000)
+        try {
+          let codeBot = await conn.requestPairingCode(addNumber)
+          codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
+          console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN `)), chalk.bold.white(chalk.white(codeBot)))
+          console.log(chalk.yellowBright('📲 Revisa tu WhatsApp, debe llegarte la notificación de emparejamiento.'))
+        } catch (e) {
+          console.error(chalk.redBright('❌ Error al generar el código de emparejamiento:'), e)
+        }
       }
     })
+
+    // Requerido: ejecutar la conexión si aún no está activa
+    if (conn.ws.readyState !== 1) {
+      await conn.connect()
+    }
   }
 }
 
