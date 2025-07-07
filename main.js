@@ -198,33 +198,34 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
   opcion = '2'
 
   if (!conn.authState.creds.registered) {
-    let addNumber
+  let addNumber
 
-    if (!!phoneNumber) {
-      addNumber = phoneNumber.replace(/[^0-9]/g, '')
-    } else {
-      do {
-        phoneNumber = await question(chalk.greenBright(`\n💬 Ingrese el número de WhatsApp (Ej: +54123456789):\n${chalk.bold('---> ')}`))
-        phoneNumber = phoneNumber.replace(/\D/g, '')
-        if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
-      } while (!await isValidPhoneNumber(phoneNumber))
+  if (!!phoneNumber) {
+    addNumber = phoneNumber.replace(/[^0-9]/g, '')
+  } else {
+    do {
+      phoneNumber = await question(chalk.greenBright(`\n💬 Ingrese el número de WhatsApp (Ej: +54123456789):\n${chalk.bold('---> ')}`))
+      phoneNumber = phoneNumber.replace(/\D/g, '')
+      if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
+    } while (!await isValidPhoneNumber(phoneNumber))
 
-      rl.close()
-      addNumber = phoneNumber.replace(/\D/g, '')
-    }
-
-    conn.ev.once('connection.update', async (update) => {
-  const { connection } = update
-  if (connection === 'open') {
-    try {
-      let code = await conn.requestPairingCode(addNumber)
-      code = code?.match(/.{1,4}/g)?.join('-') || code
-      console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
-    } catch (e) {
-      console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
-    }
+    rl.close()
+    addNumber = phoneNumber.replace(/\D/g, '')
   }
-})
+
+  conn.ev.once('connection.update', async (update) => {
+    const { connection } = update
+    if (connection === 'open') {
+      try {
+        let code = await conn.requestPairingCode(addNumber)
+        code = code?.match(/.{1,4}/g)?.join('-') || code
+        console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
+      } catch (e) {
+        console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
+      }
+    }
+  })
+}
 
 process.on('uncaughtException', console.error)
 
