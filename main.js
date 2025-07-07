@@ -348,16 +348,16 @@ global.reloadHandler = async function (restartConn) {
   }
 
   if (!isInit) {
-    conn.ev.off('messages.upsert', conn.handler)
-    conn.ev.off('connection.update', conn.connectionUpdate)
-    conn.ev.off('creds.update', conn.credsUpdate)
-  }
+  conn.ev.off('messages.upsert', conn.handler)
+  conn.ev.off('connection.update', conn.connectionUpdate)
+  conn.ev.off('creds.update', conn.credsUpdate)
+}
 
-  conn.ev.on('messages.upsert', handler.default || handler)
-  conn.ev.on('connection.update', connectionUpdate)
-  conn.ev.on('creds.update', saveState)
+conn.ev.on('messages.upsert', handler.default || handler)
+conn.ev.on('connection.update', connectionUpdate)
+conn.ev.on('creds.update', saveState)
 
-  isInit = false
+isInit = false
 }
 
 conn.handler = handler.handler.bind(global.conn)
@@ -366,203 +366,206 @@ conn.credsUpdate = saveCreds.bind(global.conn, true)
 
 const currentDateTime = new Date()
 const messageDateTime = new Date(conn.ev)
-if (currentDateTime >= messageDateTime) {
-const chats = Object.entries(conn.chats).filter(([jid, chat]) => !jid.endsWith('@g.us') && chat.isChats).map((v) => v[0])
-
-} else {
-const chats = Object.entries(conn.chats).filter(([jid, chat]) => !jid.endsWith('@g.us') && chat.isChats).map((v) => v[0])
-}
+const chats = Object.entries(conn.chats)
+  .filter(([jid, chat]) => !jid.endsWith('@g.us') && chat.isChats)
+  .map(([jid]) => jid)
 
 conn.ev.on('messages.upsert', conn.handler)
 conn.ev.on('connection.update', conn.connectionUpdate)
 conn.ev.on('creds.update', conn.credsUpdate)
+
 isInit = false
 return true
-};
+}
 
-/** Arranque nativo para subbots by - ReyEndymion >> https://github.com/ReyEndymion
- */
+// 🌀 Activación de SubBots (JadiBot) - Solo si está habilitado
 global.rutaJadiBot = join(__dirname, './JadiBots')
 
 if (global.yukiJadibts) {
-if (!existsSync(global.rutaJadiBot)) {
-mkdirSync(global.rutaJadiBot, { recursive: true }) 
-console.log(chalk.bold.cyan(`La carpeta: ${jadi} se creó correctamente.`))
-} else {
-console.log(chalk.bold.cyan(`La carpeta: ${jadi} ya está creada.`)) 
+  if (!existsSync(global.rutaJadiBot)) {
+    mkdirSync(global.rutaJadiBot, { recursive: true }) 
+    console.log(chalk.bold.cyan(`🟢 Carpeta '${jadi}' creada correctamente.`))
+  } else {
+    console.log(chalk.bold.cyan(`🟢 Carpeta '${jadi}' ya existe.`))
+  }
+
+  const readRutaJadiBot = readdirSync(rutaJadiBot)
+  if (readRutaJadiBot.length > 0) {
+    const creds = 'creds.json'
+    for (const gjbts of readRutaJadiBot) {
+      const botPath = join(rutaJadiBot, gjbts)
+      const readBotPath = readdirSync(botPath)
+      if (readBotPath.includes(creds)) {
+        yukiJadiBot({ pathYukiJadiBot: botPath, m: null, conn, args: '', usedPrefix: '/', command: 'serbot' })
+      }
+    }
+  }
 }
 
-const readRutaJadiBot = readdirSync(rutaJadiBot)
-if (readRutaJadiBot.length > 0) {
-const creds = 'creds.json'
-for (const gjbts of readRutaJadiBot) {
-const botPath = join(rutaJadiBot, gjbts)
-const readBotPath = readdirSync(botPath)
-if (readBotPath.includes(creds)) {
-yukiJadiBot({pathYukiJadiBot: botPath, m: null, conn, args: '', usedPrefix: '/', command: 'serbot'})
-}
-}
-}
-}
-
+// 🧩 Plugins dinámicos
 const pluginFolder = global.__dirname(join(__dirname, './plugins/index'))
 const pluginFilter = (filename) => /\.js$/.test(filename)
 global.plugins = {}
+
 async function filesInit() {
-for (const filename of readdirSync(pluginFolder).filter(pluginFilter)) {
-try {
-const file = global.__filename(join(pluginFolder, filename))
-const module = await import(file)
-global.plugins[filename] = module.default || module
-} catch (e) {
-conn.logger.error(e)
-delete global.plugins[filename]
-}}}
-filesInit().then((_) => Object.keys(global.plugins)).catch(console.error);
+  for (const filename of readdirSync(pluginFolder).filter(pluginFilter)) {
+    try {
+      const file = global.__filename(join(pluginFolder, filename))
+      const module = await import(file)
+      global.plugins[filename] = module.default || module
+    } catch (e) {
+      conn.logger.error(e)
+      delete global.plugins[filename]
+    }
+  }
+}
+filesInit().then(() => Object.keys(global.plugins)).catch(console.error)
 
 global.reload = async (_ev, filename) => {
-if (pluginFilter(filename)) {
-const dir = global.__filename(join(pluginFolder, filename), true);
-if (filename in global.plugins) {
-if (existsSync(dir)) conn.logger.info(` updated plugin - '${filename}'`)
-else {
-conn.logger.warn(`deleted plugin - '${filename}'`)
-return delete global.plugins[filename]
-}} else conn.logger.info(`new plugin - '${filename}'`);
-const err = syntaxerror(readFileSync(dir), filename, {
-sourceType: 'module',
-allowAwaitOutsideFunction: true,
-});
-if (err) conn.logger.error(`syntax error while loading '${filename}'\n${format(err)}`)
-else {
-try {
-const module = (await import(`${global.__filename(dir)}?update=${Date.now()}`));
-global.plugins[filename] = module.default || module;
-} catch (e) {
-conn.logger.error(`error require plugin '${filename}\n${format(e)}'`)
-} finally {
-global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)))
-}}
-}}
+  if (pluginFilter(filename)) {
+    const dir = global.__filename(join(pluginFolder, filename), true)
+    if (filename in global.plugins) {
+      if (existsSync(dir)) conn.logger.info(`🔄 Plugin actualizado: '${filename}'`)
+      else {
+        conn.logger.warn(`🗑️ Plugin eliminado: '${filename}'`)
+        return delete global.plugins[filename]
+      }
+    } else {
+      conn.logger.info(`🆕 Nuevo plugin detectado: '${filename}'`)
+    }
+
+    const err = syntaxerror(readFileSync(dir), filename, {
+      sourceType: 'module',
+      allowAwaitOutsideFunction: true
+    })
+
+    if (err) conn.logger.error(`❌ Error de sintaxis en '${filename}'\n${format(err)}`)
+    else {
+      try {
+        const module = await import(`${global.__filename(dir)}?update=${Date.now()}`)
+        global.plugins[filename] = module.default || module
+      } catch (e) {
+        conn.logger.error(`❗ Error al cargar '${filename}':\n${format(e)}`)
+      } finally {
+        global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)))
+      }
+    }
+  }
+}
 Object.freeze(global.reload)
 watch(pluginFolder, global.reload)
 await global.reloadHandler()
+
+// 🧪 Test rápido de dependencias
 async function _quickTest() {
-const test = await Promise.all([
-spawn('ffmpeg'),
-spawn('ffprobe'),
-spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-filter_complex', 'color', '-frames:v', '1', '-f', 'webp', '-']),
-spawn('convert'),
-spawn('magick'),
-spawn('gm'),
-spawn('find', ['--version']),
-].map((p) => {
-return Promise.race([
-new Promise((resolve) => {
-p.on('close', (code) => {
-resolve(code !== 127);
-});
-}),
-new Promise((resolve) => {
-p.on('error', (_) => resolve(false));
-})]);
-}));
-const [ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find] = test;
-const s = global.support = {ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find};
-Object.freeze(global.support);
+  const test = await Promise.all([
+    spawn('ffmpeg'), spawn('ffprobe'),
+    spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-filter_complex', 'color', '-frames:v', '1', '-f', 'webp', '-']),
+    spawn('convert'), spawn('magick'), spawn('gm'), spawn('find', ['--version'])
+  ].map(p => Promise.race([
+    new Promise(resolve => p.on('close', code => resolve(code !== 127))),
+    new Promise(resolve => p.on('error', () => resolve(false)))
+  ])))
+
+  const [ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find] = test
+  const s = global.support = { ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find }
+  Object.freeze(global.support)
 }
 
+// 🧹 Limpieza automática
 function clearTmp() {
-const tmpDir = join(__dirname, 'tmp')
-const filenames = readdirSync(tmpDir)
-filenames.forEach(file => {
-const filePath = join(tmpDir, file)
-unlinkSync(filePath)})
+  const tmpDir = join(__dirname, 'tmp')
+  for (const file of readdirSync(tmpDir)) {
+    unlinkSync(join(tmpDir, file))
+  }
 }
 
 function purgeSession() {
-let prekey = []
-let directorio = readdirSync(`./${sessions}`)
-let filesFolderPreKeys = directorio.filter(file => {
-return file.startsWith('pre-key-')
-})
-prekey = [...prekey, ...filesFolderPreKeys]
-filesFolderPreKeys.forEach(files => {
-unlinkSync(`./${sessions}/${files}`)
-})
-} 
+  const directorio = readdirSync(`./${sessions}`)
+  const prekeys = directorio.filter(file => file.startsWith('pre-key-'))
+  for (const file of prekeys) {
+    unlinkSync(`./${sessions}/${file}`)
+  }
+}
 
 function purgeSessionSB() {
-try {
-const listaDirectorios = readdirSync(`./${jadi}/`);
-let SBprekey = [];
-listaDirectorios.forEach(directorio => {
-if (statSync(`./${jadi}/${directorio}`).isDirectory()) {
-const DSBPreKeys = readdirSync(`./${jadi}/${directorio}`).filter(fileInDir => {
-return fileInDir.startsWith('pre-key-')
-})
-SBprekey = [...SBprekey, ...DSBPreKeys];
-DSBPreKeys.forEach(fileInDir => {
-if (fileInDir !== 'creds.json') {
-unlinkSync(`./${jadi}/${directorio}/${fileInDir}`)
-}})
-}})
-if (SBprekey.length === 0) {
-console.log(chalk.bold.green(`\n╭» 🟡 ${jadi} 🟡\n│→ NADA POR ELIMINAR \n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))
-} else {
-console.log(chalk.bold.cyanBright(`\n╭» ⚪ ${jadi} ⚪\n│→ ARCHIVOS NO ESENCIALES ELIMINADOS\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))
-}} catch (err) {
-console.log(chalk.bold.red(`\n╭» 🔴 ${jadi} 🔴\n│→ OCURRIÓ UN ERROR\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️\n` + err))
-}}
+  try {
+    const listaDirectorios = readdirSync(`./${jadi}/`)
+    let archivos = []
+    for (const dir of listaDirectorios) {
+      const subpath = `./${jadi}/${dir}`
+      if (statSync(subpath).isDirectory()) {
+        const files = readdirSync(subpath).filter(f => f.startsWith('pre-key-'))
+        archivos.push(...files)
+        for (const file of files) {
+          if (file !== 'creds.json') unlinkSync(`${subpath}/${file}`)
+        }
+      }
+    }
+    if (archivos.length === 0) {
+      console.log(chalk.green(`✅ Nada que eliminar en subbots (${jadi})`))
+    } else {
+      console.log(chalk.cyan(`♻️ Archivos temporales de subbots eliminados.`))
+    }
+  } catch (err) {
+    console.log(chalk.red(`❌ Error limpiando subbots: ${err}`))
+  }
+}
 
 function purgeOldFiles() {
-const directories = [`./${sessions}/`, `./${jadi}/`]
-directories.forEach(dir => {
-readdirSync(dir, (err, files) => {
-if (err) throw err
-files.forEach(file => {
-if (file !== 'creds.json') {
-const filePath = path.join(dir, file);
-unlinkSync(filePath, err => {
-if (err) {
-console.log(chalk.bold.red(`\n╭» 🔴 ARCHIVO 🔴\n│→ ${file} NO SE LOGRÓ BORRAR\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️❌\n` + err))
-} else {
-console.log(chalk.bold.green(`\n╭» 🟣 ARCHIVO 🟣\n│→ ${file} BORRADO CON ÉXITO\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))
-} }) }
-}) }) }) }
+  const directories = [`./${sessions}/`, `./${jadi}/`]
+  directories.forEach(dir => {
+    for (const file of readdirSync(dir)) {
+      if (file !== 'creds.json') {
+        const filePath = join(dir, file)
+        unlinkSync(filePath)
+        console.log(chalk.gray(`🗑️ Eliminado: ${file}`))
+      }
+    }
+  })
+}
 
 function redefineConsoleMethod(methodName, filterStrings) {
-const originalConsoleMethod = console[methodName]
-console[methodName] = function() {
-const message = arguments[0]
-if (typeof message === 'string' && filterStrings.some(filterString => message.includes(atob(filterString)))) {
-arguments[0] = ""
+  const original = console[methodName]
+  console[methodName] = function () {
+    const msg = arguments[0]
+    if (typeof msg === 'string' && filterStrings.some(f => msg.includes(atob(f)))) {
+      arguments[0] = ''
+    }
+    original.apply(console, arguments)
+  }
 }
-originalConsoleMethod.apply(console, arguments)
-}}
 
-setInterval(async () => {
-if (stopped === 'close' || !conn || !conn.user) return
-await clearTmp()
-console.log(chalk.bold.cyanBright(`\n╭» 🟢 MULTIMEDIA 🟢\n│→ ARCHIVOS DE LA CARPETA TMP ELIMINADAS\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))}, 1000 * 60 * 4) // 4 min 
+// ⏱️ Tareas automáticas cada cierto tiempo
+setInterval(() => {
+  if (stopped === 'close' || !conn?.user) return
+  clearTmp()
+  console.log(chalk.cyanBright(`🧹 Limpieza TMP completada`))
+}, 1000 * 60 * 4)
 
-setInterval(async () => {
-if (stopped === 'close' || !conn || !conn.user) return
-await purgeSession()
-console.log(chalk.bold.cyanBright(`\n╭» 🔵 ${global.sessions} 🔵\n│→ SESIONES NO ESENCIALES ELIMINADAS\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))}, 1000 * 60 * 10) // 10 min
+setInterval(() => {
+  if (stopped === 'close' || !conn?.user) return
+  purgeSession()
+  console.log(chalk.cyanBright(`🔒 Sesiones depuradas (${sessions})`))
+}, 1000 * 60 * 10)
 
-setInterval(async () => {
-if (stopped === 'close' || !conn || !conn.user) return
-await purgeSessionSB()}, 1000 * 60 * 10) 
+setInterval(() => {
+  if (stopped === 'close' || !conn?.user) return
+  purgeSessionSB()
+}, 1000 * 60 * 10)
 
-setInterval(async () => {
-if (stopped === 'close' || !conn || !conn.user) return
-await purgeOldFiles()
-console.log(chalk.bold.cyanBright(`\n╭» 🟠 ARCHIVOS 🟠\n│→ ARCHIVOS RESIDUALES ELIMINADAS\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))}, 1000 * 60 * 10)
+setInterval(() => {
+  if (stopped === 'close' || !conn?.user) return
+  purgeOldFiles()
+  console.log(chalk.cyanBright(`📂 Archivos residuales eliminados.`))
+}, 1000 * 60 * 10)
 
-_quickTest().then(() => conn.logger.info(chalk.bold(`🍬  H E C H O\n`.trim()))).catch(console.error)
+_quickTest()
+  .then(() => conn.logger.info(chalk.green.bold(`✨ Naruto-Bot listo y en marcha.`)))
+  .catch(console.error)
 
 async function joinChannels(conn) {
-for (const channelId of Object.values(global.ch)) {
-await conn.newsletterFollow(channelId).catch(() => {})
-}}
+  for (const channelId of Object.values(global.ch)) {
+    await conn.newsletterFollow(channelId).catch(() => {})
+  }
+}
