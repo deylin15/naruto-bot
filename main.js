@@ -195,6 +195,8 @@ const connectionOptions = {
 global.conn = makeWASocket(connectionOptions)
 
 if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
+  opcion = '2'
+
   if (!conn.authState.creds.registered) {
     let addNumber
 
@@ -210,27 +212,21 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
       addNumber = phoneNumber.replace(/\D/g, '')
     }
 
-    // Esperar conexión antes de solicitar el código
-    conn.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
+    // Esperar a que conexión esté completamente abierta antes de generar código
+    conn.ev.on('connection.update', async ({ connection }) => {
       if (connection === 'open') {
         console.log(chalk.greenBright('✅ Conexión establecida con WhatsApp.'))
 
-        try {
-          let codeBot = await conn.requestPairingCode(`+${addNumber}`)
-          codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
-
-          console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN`)), chalk.white(codeBot))
-          console.log(chalk.yellowBright('📲 Revisa tu WhatsApp, debes recibir la notificación de emparejamiento.'))
-        } catch (e) {
-          console.error(chalk.redBright('❌ Error al generar código de emparejamiento:'), e)
-        }
-      }
-
-      if (connection === 'close') {
-        console.log(chalk.redBright('❌ Conexión cerrada.'))
-        if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) {
-          console.log(chalk.yellowBright('🔁 Reintentando...'))
-        }
+        setTimeout(async () => {
+          try {
+            let codeBot = await conn.requestPairingCode(`+${addNumber}`)
+            codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
+            console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN`)), chalk.white(codeBot))
+            console.log(chalk.yellowBright('📲 Revisa tu WhatsApp, debe llegarte la notificación de emparejamiento.'))
+          } catch (e) {
+            console.error(chalk.redBright('❌ Error al generar el código de emparejamiento:'), e)
+          }
+        }, 3000) // Espera para asegurar que la conexión esté lista
       }
     })
   }
