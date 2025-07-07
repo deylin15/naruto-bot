@@ -211,15 +211,22 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
   }
 
   try {
-    conn.ev.on('connection.update', async ({ connection }) => {
+    conn.ev.on('connection.update', async (update) => {
+  const { connection } = update
   if (connection === 'open') {
-    try {
-      let code = await conn.requestPairingCode(addNumber)
-      code = code?.match(/.{1,4}/g)?.join('-') || code
-      console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
-    } catch (e) {
-      console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
-    }
+    console.log(chalk.greenBright('✅ Conexión abierta. Esperando antes de generar código...'))
+
+    setTimeout(async () => {
+      try {
+        let code = await conn.requestPairingCode(addNumber)
+        code = code?.match(/.{1,4}/g)?.join('-') || code
+
+        console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
+        console.log(chalk.yellow('📲 Revisa tu WhatsApp, deberías recibir una notificación para vincular con código.'))
+      } catch (e) {
+        console.error(chalk.redBright('❌ Error al generar código de emparejamiento:'), e)
+      }
+    }, 5000) // Esperar 5 segundos para asegurar la conexión
   }
 })
 
