@@ -209,26 +209,29 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
         if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
       } while (!await isValidPhoneNumber(phoneNumber))
       addNumber = phoneNumber.replace(/\D/g, '')
-      rl.close()
     }
 
-    // Esperar a que la conexión esté abierta
-    conn.ev.on('connection.update', async ({ connection }) => {
-      if (connection === 'open') {
-        console.log(chalk.greenBright('✅ Conexión establecida con WhatsApp.'))
+    rl.close()
 
-        setTimeout(async () => {
-          try {
-            let codeBot = await conn.requestPairingCode(`+${addNumber}`)
-            codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
-            console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN`)), chalk.white(codeBot))
-            console.log(chalk.yellowBright('📲 Revisa tu WhatsApp, debe llegarte la notificación de emparejamiento.'))
-          } catch (e) {
-            console.error(chalk.redBright('❌ Error al generar el código de emparejamiento:'), e)
-          }
-        }, 3000)
-      }
+    const esperarConexion = () => new Promise(resolve => {
+      conn.ev.on('connection.update', async ({ connection }) => {
+        if (connection === 'open') {
+          resolve()
+        }
+      })
     })
+
+    try {
+      console.log(chalk.bold.yellow(`⌛ Esperando conexión con WhatsApp...`))
+      await esperarConexion()
+
+      let codeBot = await conn.requestPairingCode(`+${addNumber}`)
+      codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
+      console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN`)), chalk.white(codeBot))
+      console.log(chalk.yellowBright('📲 Revisa tu WhatsApp, debe llegarte la notificación de emparejamiento.'))
+    } catch (e) {
+      console.error(chalk.redBright('❌ Error al generar el código de emparejamiento:'), e)
+    }
   }
 }
 
