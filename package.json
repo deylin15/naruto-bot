@@ -18,16 +18,16 @@
     "eslint": "eslint .",
     "eslintfix": "eslint --fix ."
   },
-  "homepage": "https://github.com/Deylin-Eliac/Pikachu-Bot",
+  "homepage": "https://github.com/Deylin-Eliac/Naruto-Bot",
   "author": {
     "name": "Deylin"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Deylin-Eliac/Pikachu-Bot.git"
+    "url": "git+https://github.com/Deylin-Eliac/Naruto-Bot.git"
   },
   "bugs": {
-    "url": "https://github.com/Deylin-Eliac/Pikachu-Bot/issues"
+    "url": "https://github.com/Deylin-Eliac/Naruto-Bot/issues"
   },
   "license": "GPL-3.0-or-later",
   "dependencies": {
