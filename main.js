@@ -213,13 +213,18 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
       addNumber = phoneNumber.replace(/\D/g, '')
     }
 
-    setTimeout(async () => {
+    conn.ev.once('connection.update', async (update) => {
+  const { connection } = update
+  if (connection === 'open') {
+    try {
       let code = await conn.requestPairingCode(addNumber)
       code = code?.match(/.{1,4}/g)?.join('-') || code
-      console.log(chalk.bold.bgMagenta.white(' CÓDIGO DE EMPAREJAMIENTO: '), chalk.bold.white(code))
-    }, 2000)
+      console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
+    } catch (e) {
+      console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
+    }
   }
-}
+})
 
 process.on('uncaughtException', console.error)
 
