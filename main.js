@@ -76,7 +76,7 @@ serialize()
 
 const sessions = global.sessions || 'session'
 const { state, saveState, saveCreds } = await useMultiFileAuthState(sessions)
-const msgRetryCounterMap = MessageRetryMap()
+const msgRetryCounterMap = {}
 const msgRetryCounterCache = new NodeCache()
 const { version } = await fetchLatestBaileysVersion()
 let phoneNumber = global.botNumberCode
