@@ -601,14 +601,24 @@ restrict: `🍡 Esta caracteristica está desactivada.`
 }[type];
 if (msg) return m.reply(msg).then(_ => m.react('✖️'))}
 
-let file = global.__filename(import.meta.url, true)
-watchFile(file, async () => {
-unwatchFile(file)
-console.log(chalk.magenta("Se actualizo 'handler.js'"))
-//if (global.reloadHandler) console.log(await global.reloadHandler())
+let handlerFile = global.__filename(import.meta.url, true)
 
-if (global.conns && global.conns.length > 0 ) {
-const users = [...new Set([...global.conns.filter((conn) => conn.user && conn.ws.socket && conn.ws.socket.readyState !== ws.CLOSED).map((conn) => conn)])];
-for (const userr of users) {
-userr.subreloadHandler(false)
-}}});
+import { WebSocket } from 'ws' // 🔹 Asegura que ws.CLOSED esté disponible
+
+watchFile(handlerFile, async () => {
+  unwatchFile(handlerFile)
+  console.log(chalk.magenta("🔁 Se actualizó 'handler.js'"))
+
+  if (global.conns && global.conns.length > 0) {
+    const users = [
+      ...new Set(
+        global.conns.filter((conn) =>
+          conn.user && conn.ws?.socket?.readyState !== WebSocket.CLOSED
+        )
+      )
+    ]
+    for (const userr of users) {
+      userr.subreloadHandler?.(false)
+    }
+  }
+})
