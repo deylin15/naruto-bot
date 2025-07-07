@@ -195,8 +195,6 @@ const connectionOptions = {
 global.conn = makeWASocket(connectionOptions)
 
 if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
-
-  if (!conn.authState.creds.registered) {
   let addNumber
 
   if (!!phoneNumber) {
@@ -212,19 +210,14 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
     addNumber = phoneNumber.replace(/\D/g, '')
   }
 
-  conn.ev.once('connection.update', async (update) => {
-    const { connection } = update
-    if (connection === 'open') {
-      try {
-        let code = await conn.requestPairingCode(addNumber)
-        code = code?.match(/.{1,4}/g)?.join('-') || code
-        console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
-      } catch (e) {
-        console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
-      }
-    }
-  })
-}} 
+  try {
+    let code = await conn.requestPairingCode(addNumber)
+    code = code?.match(/.{1,4}/g)?.join('-') || code
+    console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
+  } catch (e) {
+    console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
+  }
+}
 
 process.on('uncaughtException', console.error)
 
