@@ -8,7 +8,7 @@ import path, { join } from 'path'
 import { fileURLToPath, pathToFileURL } from 'url'
 import { platform } from 'process'
 import * as ws from 'ws'
-import fs from 'fs'
+import fs, { existsSync, readdirSync, readFileSync, unlinkSync, watchFile, unwatchFile, watch } from 'fs'
 import yargs from 'yargs'
 import lodash from 'lodash'
 import chalk from 'chalk'
@@ -22,6 +22,7 @@ import { Low, JSONFile } from 'lowdb'
 import { makeWASocket, protoType, serialize } from './lib/simple.js'
 import { mongoDB, mongoDBV2 } from './lib/mongoDB.js'
 import store from './lib/store.js'
+import pino from 'pino'
 import pkg from 'google-libphonenumber'
 const { PhoneNumberUtil } = pkg
 const phoneUtil = PhoneNumberUtil.getInstance()
@@ -31,10 +32,8 @@ const { chain } = lodash
 const { CONNECTING } = ws
 const PORT = process.env.PORT || process.env.SERVER_PORT || 3000
 
-
 protoType()
 serialize()
-
 
 global.__filename = (pathURL = import.meta.url, rmPrefix = platform !== 'win32') =>
   rmPrefix ? fileURLToPath(pathURL) : pathToFileURL(pathURL).toString()
@@ -44,22 +43,17 @@ global.__require = dir => createRequire(dir)
 
 const __dirname = global.__dirname(import.meta.url)
 
-
 global.API = (name, route = '/', query = {}, key) => {
   const base = name in global.APIs ? global.APIs[name] : name
-  const q = key
-    ? { [key]: global.APIKeys[base], ...query }
-    : query
+  const q = key ? { [key]: global.APIKeys[base], ...query } : query
   return base + route + (Object.keys(q).length ? '?' + new URLSearchParams(q) : '')
 }
-
 
 global.opts = yargs(process.argv.slice(2)).exitProcess(false).parse()
 global.prefix = new RegExp(
   '^[' + (opts.prefix || '*/i!#$%+£¢€¥^°=¶∆×÷π√✓©®&.\\-.@')
     .replace(/[|\\{}()[\]^$+*.\-\^]/g, '\\$&') + ']'
 )
-
 
 global.db = new Low(
   /^https?:\/\//.test(opts.db || '')
@@ -82,7 +76,6 @@ global.loadDatabase = async function loadDatabase() {
   }
 
   if (global.db.data !== null) return
-
   global.db.READ = true
   await global.db.read().catch(console.error)
   global.db.READ = null
@@ -99,17 +92,10 @@ global.loadDatabase = async function loadDatabase() {
 
   global.db.chain = chain(global.db.data)
 }
-
 await global.loadDatabase()
 
 global.conns = Array.isArray(global.conns) ? global.conns : []
-
-if (global.conns.length) {
-  console.log(chalk.green('✅ Conexiones globales restauradas'))
-} else {
-  console.log(chalk.yellow('🟡 Inicializando nuevas conexiones...'))
-}
-
+console.log(global.conns.length ? chalk.green('✅ Conexiones globales restauradas') : chalk.yellow('🟡 Inicializando nuevas conexiones...'))
 
 global.creds = 'creds.json'
 global.authFile = 'NarutoSession'
@@ -123,7 +109,6 @@ let phoneNumber = global.botNumberCode
 const methodCodeQR = process.argv.includes('qr')
 const methodCode = !!phoneNumber || process.argv.includes('code')
 const MethodMobile = process.argv.includes('mobile')
-
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -140,7 +125,6 @@ const question = (text) => {
     })
   })
 }
-
 
 let opcion
 if (methodCodeQR) {
@@ -164,7 +148,6 @@ ${chalk.bold('---> ')}
   } while (!['1', '2'].includes(opcion) || fs.existsSync(`./${authFile}/creds.json`))
 }
 
-
 const filterStrings = [
   "Q2xvc2luZyBzdGFsZSBvcGVu", "Q2xvc2luZyBvcGVuIHNlc3Npb24=",
   "RmFpbGVkIHRvIGRlY3J5cHQ=", "U2Vzc2lvbiBlcnJvcg==",
@@ -175,7 +158,6 @@ console.info = () => {}
 console.debug = () => {}
 ['log', 'warn', 'error'].forEach(m => redefineConsoleMethod(m, filterStrings))
 
-
 const connectionOptions = {
   logger: pino({ level: 'silent' }),
   printQRInTerminal: opcion === '1' || methodCodeQR,
@@ -183,7 +165,7 @@ const connectionOptions = {
   browser: ['Naruto-Bot', 'Edge', '20.0.04'],
   auth: {
     creds: state.creds,
-    keys: makeCacheableSignalKeyStore(state.keys, Pino({ level: "fatal" }).child({ level: "fatal" })),
+    keys: makeCacheableSignalKeyStore(state.keys, pino({ level: 'fatal' })),
   },
   markOnlineOnConnect: true,
   generateHighQualityLinkPreview: true,
@@ -199,9 +181,7 @@ const connectionOptions = {
   version: [2, 3000, 1015901307],
 }
 
-
 global.conn = makeWASocket(connectionOptions)
-
 
 if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
   opcion = '2'
@@ -223,112 +203,14 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
     }
 
     setTimeout(async () => {
-  let code = await conn.requestPairingCode(addNumber)
-  code = code?.match(/.{1,4}/g)?.join('-') || code
-  console.log(chalk.bold.bgMagenta.white(' CÓDIGO DE EMPAREJAMIENTO: '), chalk.bold.white(code))
-}, 2000)
-}
-
-conn.isInit = false
-conn.well = false
-
-if (!opts['test']) {
-  if (global.db) setInterval(async () => {
-    if (global.db.data) await global.db.write()
-  }, 30 * 1000)
-}
-
-if (opts['server']) {
-  (await import('./server.js')).default(global.conn, PORT)
-}
-
-async function getMessage(key) {
-  if (store) {
-    const jid = jidNormalizedUser(key.remoteJid)
-    const msg = await store.loadMessage(jid, key.id)
-    return msg?.message || ""
-  }
-  return { conversation: 'Naruto-Bot' }
-}
-
-async function connectionUpdate(update) {
-  const { connection, lastDisconnect, isNewLogin } = update
-  global.stopped = connection
-  if (isNewLogin) conn.isInit = true
-
-  const code = lastDisconnect?.error?.output?.statusCode || lastDisconnect?.error?.output?.payload?.statusCode
-  if (code && code !== DisconnectReason.loggedOut && conn?.ws.socket == null) {
-    await global.reloadHandler(true).catch(console.error)
-    global.timestamp.connect = new Date()
-  }
-
-  if (global.db.data == null) loadDatabase()
-
-  if ((update.qr != 0 && update.qr !== undefined) || methodCodeQR) {
-    if (opcion == '1' || methodCodeQR) {
-      console.log(chalk.bold.yellow('\n🌸 ESCANEA EL CÓDIGO QR — EXPIRA EN 45 SEGUNDOS'))
-    }
-  }
-
-  if (connection == 'open') {
-    console.log(chalk.bold.greenBright(`
-❒⸺⸺⸺⸺【• CONECTADO •】⸺⸺⸺⸺❒
-│
-│ 🟢 Se ha conectado con WhatsApp exitosamente.
-│
-❒⸺⸺⸺⸺【• CONECTADO •】⸺⸺⸺⸺❒`))
-  }
-
-  let reason = new Boom(lastDisconnect?.error)?.output?.statusCode
-  if (connection === 'close') {
-    switch (reason) {
-      case DisconnectReason.badSession:
-        console.log(chalk.bold.cyanBright(`⚠️ SIN CONEXIÓN — BORRA LA CARPETA '${global.authFile}' Y ESCANEA DE NUEVO.`))
-        break
-      case DisconnectReason.connectionClosed:
-        console.log(chalk.bold.magentaBright(`⚠️ CONEXIÓN CERRADA — REINTENTANDO...`))
-        await global.reloadHandler(true).catch(console.error)
-        break
-      case DisconnectReason.connectionLost:
-        console.log(chalk.bold.blueBright(`⚠️ CONEXIÓN PERDIDA CON EL SERVIDOR — REINTENTANDO...`))
-        await global.reloadHandler(true).catch(console.error)
-        break
-      case DisconnectReason.connectionReplaced:
-        console.log(chalk.bold.yellowBright(`⚠️ SESIÓN REEMPLAZADA — SE ABRIÓ OTRA SESIÓN.`))
-        break
-      case DisconnectReason.loggedOut:
-        console.log(chalk.bold.redBright(`⚠️ SIN CONEXIÓN — BORRA LA CARPETA '${global.authFile}' Y ESCANEA DE NUEVO.`))
-        await global.reloadHandler(true).catch(console.error)
-        break
-      case DisconnectReason.restartRequired:
-        console.log(chalk.bold.cyanBright(`❇️ CONECTANDO AL SERVIDOR...`))
-        await global.reloadHandler(true).catch(console.error)
-        break
-      case DisconnectReason.timedOut:
-        console.log(chalk.bold.yellowBright(`⌛ TIEMPO AGOTADO — REINTENTANDO CONEXIÓN...`))
-        await global.reloadHandler(true).catch(console.error)
-        break
-      default:
-        console.log(chalk.bold.redBright(`⚠️ DESCONEXIÓN DESCONOCIDA: ${reason || 'No encontrado'} >> ${connection || 'No encontrado'}`))
-        break
-    }
+      let code = await conn.requestPairingCode(addNumber)
+      code = code?.match(/.{1,4}/g)?.join('-') || code
+      console.log(chalk.bold.bgMagenta.white(' CÓDIGO DE EMPAREJAMIENTO: '), chalk.bold.white(code))
+    }, 2000)
   }
 }
 
 process.on('uncaughtException', console.error)
-
-;(async () => {
-  global.conns = []
-
-  const mainBotAuthFile = 'NarutoSession'
-  try {
-    const mainBot = await connectionUpdate(mainBotAuthFile)
-    global.conns.push(mainBot)
-    console.log(chalk.bold.greenBright(`🍥 Naruto-Bot conectado correctamente.`))
-  } catch (error) {
-    console.error(chalk.bold.redBright(`❌ Error al iniciar Naruto-Bot: `), error)
-  }
-})()
 
 let isInit = true
 let handler = await import('./handler.js')
@@ -367,7 +249,6 @@ global.reloadHandler = async function (restatConn) {
   return true
 }
 
-
 const pluginFolder = global.__dirname(join(__dirname, './plugins/index'))
 const pluginFilter = (filename) => /\.js$/.test(filename)
 global.plugins = {}
@@ -384,7 +265,6 @@ async function filesInit() {
     }
   }
 }
-
 filesInit().then(() => Object.keys(global.plugins)).catch(console.error)
 
 global.reload = async (_ev, filename) => {
@@ -419,106 +299,17 @@ global.reload = async (_ev, filename) => {
   } catch (e) {
     conn.logger.error(`❌ Error al recargar plugin '${filename}':\n${format(e)}`)
   } finally {
-    global.plugins = Object.fromEntries(
-      Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b))
-    )
+    global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)))
   }
 }
-
 Object.freeze(global.reload)
 watch(pluginFolder, global.reload)
-await global.reloadHandler();
+await global.reloadHandler()
 
-async function _quickTest() {
-  const test = await Promise.all([
-    spawn('ffmpeg'),
-    spawn('ffprobe'),
-    spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-filter_complex', 'color', '-frames:v', '1', '-f', 'webp', '-']),
-    spawn('convert'),
-    spawn('magick'),
-    spawn('gm'),
-    spawn('find', ['--version']),
-  ].map(p => Promise.race([
-    new Promise(resolve => p.on('close', code => resolve(code !== 127))),
-    new Promise(resolve => p.on('error', () => resolve(false)))
-  ])))
-
-  const [ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find] = test
-  global.support = { ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find }
-  Object.freeze(global.support)
-}
-
-function clearTmp() {
-  const tmpDir = join(__dirname, 'tmp')
-  if (!existsSync(tmpDir)) return
-  for (const file of readdirSync(tmpDir)) {
-    try {
-      unlinkSync(join(tmpDir, file))
-    } catch {}
-  }
-}
-
-function purgeSession() {
-  const dir = './NarutoSession'
-  if (!existsSync(dir)) return
-  const prekeys = readdirSync(dir).filter(f => f.startsWith('pre-key-'))
-  for (const file of prekeys) {
-    try {
-      unlinkSync(join(dir, file))
-    } catch {}
-  }
-}
-
-function purgeOldFiles() {
-  const dir = './NarutoSession'
-  if (!existsSync(dir)) return
-  for (const file of readdirSync(dir)) {
-    if (file !== 'creds.json') {
-      const filePath = join(dir, file)
-      try {
-        unlinkSync(filePath)
-        console.log(chalk.bold.green(`🟢 Archivo eliminado: ${file}`))
-      } catch (err) {
-        console.log(chalk.bold.red(`🔴 No se pudo eliminar: ${file}\n${err}`))
-      }
-    }
-  }
-}
-
-function redefineConsoleMethod(methodName, filterStrings) {
-  const original = console[methodName]
-  console[methodName] = function (...args) {
-    const msg = args[0]
-    if (typeof msg === 'string' && filterStrings.some(s => msg.includes(atob(s)))) {
-      args[0] = ''
-    }
-    original.apply(console, args)
-  }
-}
-
-
-setInterval(() => {
-  if (stopped === 'close' || !conn || !conn.user) return
-  clearTmp()
-  console.log(chalk.bold.cyanBright(`\n🌀 TMP LIMPIADO: Archivos temporales eliminados.`))
-}, 1000 * 60 * 4)
-
-
-setInterval(() => {
-  if (stopped === 'close' || !conn || !conn.user) return
-  purgeOldFiles()
-  console.log(chalk.bold.yellowBright(`\n🍥 KEYS LIMPIADAS: Archivos residuales eliminados.`))
-}, 1000 * 60 * 10)
-
-_quickTest()
-  .then(() => conn.logger.info(chalk.bold(`\n🔥 Naruto-Bot listo para la batalla.`)))
-  .catch(console.error)
-
-let file = fileURLToPath(import.meta.url)
-watchFile(file, () => {
-  unwatchFile(file)
+watchFile(fileURLToPath(import.meta.url), () => {
+  unwatchFile(fileURLToPath(import.meta.url))
   console.log(chalk.bold.greenBright("📦 Código actualizado automáticamente."))
-  import(`${file}?update=${Date.now()}`)
+  import(`${fileURLToPath(import.meta.url)}?update=${Date.now()}`)
 })
 
 async function isValidPhoneNumber(number) {
