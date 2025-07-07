@@ -224,7 +224,7 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
       }
     }
   })
-}
+}} 
 
 process.on('uncaughtException', console.error)
 
