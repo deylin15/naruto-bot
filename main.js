@@ -5,7 +5,7 @@ import './config.js'
 
 import { createRequire } from 'module'
 import path, { join } from 'path'
-import { fileURLToPath, pathToFileURL } from 'url'
+import {fileURLToPath, pathToFileURL} from 'url'
 import { platform } from 'process'
 import * as ws from 'ws'
 import fs, { existsSync, readdirSync, readFileSync, unlinkSync, watchFile, unwatchFile, watch } from 'fs'
@@ -260,7 +260,7 @@ global.reloadHandler = async function (restatConn) {
   return true
 }
 
-const pluginFolder = global.__dirname(join(__dirname, './plugins/index'))
+const path = pathToFileURL('./plugins/index')
 const pluginFilter = (filename) => /\.js$/.test(filename)
 global.plugins = {}
 
