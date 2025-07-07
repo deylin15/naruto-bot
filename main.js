@@ -417,137 +417,125 @@ global.reload = async (_ev, filename) => {
       }
     }
   }
+} else {
+  try {
+    const module = await import(`${global.__filename(dir)}?update=${Date.now()}`);
+    global.plugins[filename] = module.default || module;
+  } catch (e) {
+    conn.logger.error(`❌ ERROR EN EL PLUGIN '${filename}'\n${format(e)}`);
+  } finally {
+    global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)));
+  }
 }
-else {
-try {
-const module = (await import(`${global.__filename(dir)}?update=${Date.now()}`));
-global.plugins[filename] = module.default || module;
-} catch (e) {
-conn.logger.error(`HAY UN ERROR REQUIERE EL PLUGINS '${filename}\n${format(e)}'`);
-} finally {
-global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)));
-}}}};
+};
+
 Object.freeze(global.reload);
 watch(pluginFolder, global.reload);
 await global.reloadHandler();
+
 async function _quickTest() {
-const test = await Promise.all([
-spawn('ffmpeg'),
-spawn('ffprobe'),
-spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-filter_complex', 'color', '-frames:v', '1', '-f', 'webp', '-']),
-spawn('convert'),
-spawn('magick'),
-spawn('gm'),
-spawn('find', ['--version']),
-].map((p) => {
-return Promise.race([
-new Promise((resolve) => {
-p.on('close', (code) => {
-resolve(code !== 127);
-});
-}),
-new Promise((resolve) => {
-p.on('error', (_) => resolve(false));
-})]);
-}));
-const [ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find] = test;
-const s = global.support = {ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find};
-Object.freeze(global.support);
+  const test = await Promise.all([
+    spawn('ffmpeg'),
+    spawn('ffprobe'),
+    spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-filter_complex', 'color', '-frames:v', '1', '-f', 'webp', '-']),
+    spawn('convert'),
+    spawn('magick'),
+    spawn('gm'),
+    spawn('find', ['--version']),
+  ].map(p => Promise.race([
+    new Promise(resolve => p.on('close', code => resolve(code !== 127))),
+    new Promise(resolve => p.on('error', () => resolve(false)))
+  ])))
+
+  const [ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find] = test
+  global.support = { ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find }
+  Object.freeze(global.support)
 }
+
 function clearTmp() {
-const tmpDir = join(__dirname, 'tmp')
-const filenames = readdirSync(tmpDir)
-filenames.forEach(file => {
-const filePath = join(tmpDir, file)
-unlinkSync(filePath)})
+  const tmpDir = join(__dirname, 'tmp')
+  if (!existsSync(tmpDir)) return
+  for (const file of readdirSync(tmpDir)) {
+    try {
+      unlinkSync(join(tmpDir, file))
+    } catch {}
+  }
 }
+
 function purgeSession() {
-let prekey = []
-let directorio = readdirSync("./YukiSession")
-let filesFolderPreKeys = directorio.filter(file => {
-return file.startsWith('pre-key-')
-})
-prekey = [...prekey, ...filesFolderPreKeys]
-filesFolderPreKeys.forEach(files => {
-unlinkSync(`./YukiSession/${files}`)
-})
-} 
-function purgeSessionSB() {
-try {
-const listaDirectorios = readdirSync(`./${authFileJB}/`);
-let SBprekey = [];
-listaDirectorios.forEach(directorio => {
-if (statSync(`./${authFileJB}/${directorio}`).isDirectory()) {
-const DSBPreKeys = readdirSync(`./${authFileJB}/${directorio}`).filter(fileInDir => {
-return fileInDir.startsWith('pre-key-')
-})
-SBprekey = [...SBprekey, ...DSBPreKeys];
-DSBPreKeys.forEach(fileInDir => {
-if (fileInDir !== 'creds.json') {
-unlinkSync(`./${authFileJB}/${directorio}/${fileInDir}`)
-}})
-}})
-if (SBprekey.length === 0) {
-console.log(chalk.bold.green(`\n╭» 🟡 YukiJadiBot 🟡\n│→ NADA POR ELIMINAR \n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))
-} else {
-console.log(chalk.bold.cyanBright(`\n╭» ⚪ YukiJadiBot ⚪\n│→ ARCHIVOS NO ESENCIALES ELIMINADOS\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))
-}} catch (err) {
-console.log(chalk.bold.red(`\n╭» 🔴 YukiJadiBot 🔴\n│→ OCURRIÓ UN ERROR\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️\n` + err))
-}}
-function purgeOldFiles() {
-const directories = ['./YukiSession/', './YukiJadiBot/']
-directories.forEach(dir => {
-readdirSync(dir, (err, files) => {
-if (err) throw err
-files.forEach(file => {
-if (file !== 'creds.json') {
-const filePath = path.join(dir, file);
-unlinkSync(filePath, err => {
-if (err) {
-console.log(chalk.bold.red(`\n╭» 🔴 ARCHIVO 🔴\n│→ ${file} NO SE LOGRÓ BORRAR\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️❌\n` + err))
-} else {
-console.log(chalk.bold.green(`\n╭» 🟣 ARCHIVO 🟣\n│→ ${file} BORRADO CON ÉXITO\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))
-} }) }
-}) }) }) }
-function redefineConsoleMethod(methodName, filterStrings) {
-const originalConsoleMethod = console[methodName]
-console[methodName] = function() {
-const message = arguments[0]
-if (typeof message === 'string' && filterStrings.some(filterString => message.includes(atob(filterString)))) {
-arguments[0] = ""
+  const dir = './NarutoSession'
+  if (!existsSync(dir)) return
+  const prekeys = readdirSync(dir).filter(f => f.startsWith('pre-key-'))
+  for (const file of prekeys) {
+    try {
+      unlinkSync(join(dir, file))
+    } catch {}
+  }
 }
-originalConsoleMethod.apply(console, arguments)
-}}
-setInterval(async () => {
-if (stopped === 'close' || !conn || !conn.user) return
-await clearTmp()
-console.log(chalk.bold.cyanBright(`\n╭» 🟢 MULTIMEDIA 🟢\n│→ ARCHIVOS DE LA CARPETA TMP ELIMINADAS\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))}, 1000 * 60 * 4) // 4 min 
 
-setInterval(async () => {
-if (stopped === 'close' || !conn || !conn.user) return
-await purgeOldFiles()
-console.log(chalk.bold.cyanBright(`\n╭» 🟠 ARCHIVOS 🟠\n│→ ARCHIVOS RESIDUALES ELIMINADAS\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))}, 1000 * 60 * 10)
+function purgeOldFiles() {
+  const dir = './NarutoSession'
+  if (!existsSync(dir)) return
+  for (const file of readdirSync(dir)) {
+    if (file !== 'creds.json') {
+      const filePath = join(dir, file)
+      try {
+        unlinkSync(filePath)
+        console.log(chalk.bold.green(`🟢 Archivo eliminado: ${file}`))
+      } catch (err) {
+        console.log(chalk.bold.red(`🔴 No se pudo eliminar: ${file}\n${err}`))
+      }
+    }
+  }
+}
 
-_quickTest().then(() => conn.logger.info(chalk.bold(`🌹  H E C H O\n`.trim()))).catch(console.error)
+function redefineConsoleMethod(methodName, filterStrings) {
+  const original = console[methodName]
+  console[methodName] = function (...args) {
+    const msg = args[0]
+    if (typeof msg === 'string' && filterStrings.some(s => msg.includes(atob(s)))) {
+      args[0] = ''
+    }
+    original.apply(console, args)
+  }
+}
+
+// Limpieza cada 4 minutos
+setInterval(() => {
+  if (stopped === 'close' || !conn || !conn.user) return
+  clearTmp()
+  console.log(chalk.bold.cyanBright(`\n🌀 TMP LIMPIADO: Archivos temporales eliminados.`))
+}, 1000 * 60 * 4)
+
+// Limpieza de claves antiguas cada 10 minutos
+setInterval(() => {
+  if (stopped === 'close' || !conn || !conn.user) return
+  purgeOldFiles()
+  console.log(chalk.bold.yellowBright(`\n🍥 KEYS LIMPIADAS: Archivos residuales eliminados.`))
+}, 1000 * 60 * 10)
+
+_quickTest()
+  .then(() => conn.logger.info(chalk.bold(`\n🔥 Naruto-Bot listo para la batalla.`)))
+  .catch(console.error)
 
 let file = fileURLToPath(import.meta.url)
 watchFile(file, () => {
-unwatchFile(file)
-console.log(chalk.bold.greenBright("Actualizado"))
-import(`${file}?update=${Date.now()}`)
+  unwatchFile(file)
+  console.log(chalk.bold.greenBright("📦 Código actualizado automáticamente."))
+  import(`${file}?update=${Date.now()}`)
 })
 
 async function isValidPhoneNumber(number) {
-try {
-number = number.replace(/\s+/g, '')
-// Si el número empieza con '+521' o '+52 1', quitar el '1'
-if (number.startsWith('+521')) {
-number = number.replace('+521', '+52'); // Cambiar +521 a +52
-} else if (number.startsWith('+52') && number[4] === '1') {
-number = number.replace('+52 1', '+52'); // Cambiar +52 1 a +52
+  try {
+    number = number.replace(/\s+/g, '')
+    if (number.startsWith('+521')) {
+      number = number.replace('+521', '+52')
+    } else if (number.startsWith('+52') && number[4] === '1') {
+      number = number.replace('+52 1', '+52')
+    }
+    const parsed = phoneUtil.parseAndKeepRawInput(number)
+    return phoneUtil.isValidNumber(parsed)
+  } catch {
+    return false
+  }
 }
-const parsedNumber = phoneUtil.parseAndKeepRawInput(number)
-return phoneUtil.isValidNumber(parsedNumber)
-} catch (error) {
-return false
-}}
