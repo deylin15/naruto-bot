@@ -33,7 +33,7 @@ say('Pixelap', {
   align: 'center',
   colors: ['white']
 });
-say(`Developed By • Pixelap`, {
+say(`Developed By • Deylin`, {
   font: 'console',
   align: 'center',
   colors: ['magenta']
