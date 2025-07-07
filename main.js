@@ -214,23 +214,19 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
 
   await pedirNumero()
 
-  conn.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
+  conn.ev.once('connection.update', async ({ connection }) => {
     if (connection === 'open') {
-      console.log(chalk.greenBright('✅ Conexión abierta. Generando código de emparejamiento...'))
-
       try {
+        // Esperar 3 segundos para asegurar conexión
+        await new Promise(resolve => setTimeout(resolve, 3000))
+
         let code = await conn.requestPairingCode(addNumber)
         code = code?.match(/.{1,4}/g)?.join('-') || code
+
         console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
-        console.log(chalk.yellow('📲 Revisa tu WhatsApp. Deberías recibir una notificación para emparejar el código.'))
+        console.log(chalk.yellowBright('📲 Revisa tu WhatsApp. Deberías recibir una notificación de emparejamiento.'))
       } catch (e) {
-        console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
-      }
-    } else if (connection === 'close') {
-      const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut
-      if (shouldReconnect) {
-        console.log(chalk.yellowBright('⚠️ Reintentando conexión...'))
-        global.conn = makeWASocket(connectionOptions)
+        console.error(chalk.redBright('❌ Error al generar código de emparejamiento:'), e)
       }
     }
   })
