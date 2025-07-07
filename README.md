@@ -1,1 +1,3 @@
-# Pixelap
+# Naruto-bot 
+
+[g](config.js)
