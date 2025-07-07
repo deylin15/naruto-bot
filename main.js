@@ -133,7 +133,7 @@ if (!fs.existsSync(`./${sessions}/creds.json`)) {
     numero = phoneNumber.replace(/[^0-9]/g, '')
   } else {
     do {
-      numero = await question(chalk.green('📱 Ingrese su número de WhatsApp:\nEjemplo: 57300xxxxxxx\n--> '))
+      numero = await question(chalk.green(' 🔥 Ingrese su número de WhatsApp:\nEjemplo: 57300xxxxxxx\n--> '))
       numero = numero.replace(/[^0-9]/g, '')
     } while (!/^\d+$/.test(numero) || !/^(504|57|51|52|1|34|55|591|598|56)/.test(numero))
   }
@@ -143,7 +143,7 @@ if (!fs.existsSync(`./${sessions}/creds.json`)) {
       setTimeout(async () => {
         let code = await conn.requestPairingCode(numero)
         code = code?.match(/.{1,4}/g)?.join('-') || code
-        console.log(chalk.white.bold.bgMagenta(`✨ CÓDIGO DE EMPAREJAMIENTO DE NARUTO-BOT ✨\n\n🔗 Chakra Code: ${code}\n`))
+        console.log(chalk.white.bold.bgMagenta(`💥 CÓDIGO DE EMPAREJAMIENTO DE NARUTO-BOT ✨\n\n🔗 Chakra Code: ${code}\n`))
       }, 3000)
     }
   }
