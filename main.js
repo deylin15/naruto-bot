@@ -211,13 +211,17 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
   }
 
   try {
-    let code = await conn.requestPairingCode(addNumber)
-    code = code?.match(/.{1,4}/g)?.join('-') || code
-    console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
-  } catch (e) {
-    console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
+    conn.ev.on('connection.update', async ({ connection }) => {
+  if (connection === 'open') {
+    try {
+      let code = await conn.requestPairingCode(addNumber)
+      code = code?.match(/.{1,4}/g)?.join('-') || code
+      console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
+    } catch (e) {
+      console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
+    }
   }
-}
+})
 
 process.on('uncaughtException', console.error)
 
