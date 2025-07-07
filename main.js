@@ -194,55 +194,59 @@ const connectionOptions = {
 
 global.conn = makeWASocket(connectionOptions)
 
-if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
-  opcion = '2'
+async function procesoEmparejamiento() {
+  if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
+    opcion = '2'
 
-  if (!conn.authState.creds.registered) {
-    let addNumber
+    if (!conn.authState.creds.registered) {
+      let addNumber
 
-    if (!!phoneNumber) {
-      addNumber = phoneNumber.replace(/[^0-9]/g, '')
-    } else {
-      do {
-        phoneNumber = await question(chalk.bgBlack(chalk.bold.greenBright(`⚡ Ingrese el número de WhatsApp.\n${chalk.yellowBright(`Ej: +50433191934`)}\n${chalk.magentaBright('---> ')}`)))
-        phoneNumber = phoneNumber.replace(/\D/g, '')
-        if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
-      } while (!await isValidPhoneNumber(phoneNumber))
-      rl.close()
-      addNumber = phoneNumber.replace(/\D/g, '')
-    }
-
-    console.log(chalk.yellow(`⏳ Conectando con WhatsApp...`))
-
-    // Esperar conexión abierta antes de solicitar el código
-    const waitConnectionOpen = new Promise((resolve) => {
-      conn.ev.on('connection.update', async ({ connection }) => {
-        if (connection === 'open') {
-          console.log(chalk.greenBright('✅ Conexión establecida con WhatsApp'))
-          resolve(true)
-        }
-      })
-    })
-
-    // Forzar conexión si no está abierta
-    if (conn.ws?.readyState !== 1) {
-      try {
-        await conn.connect()
-      } catch (err) {
-        console.error(chalk.redBright('❌ Error al conectar con WhatsApp:'), err)
-        return
+      if (!!phoneNumber) {
+        addNumber = phoneNumber.replace(/[^0-9]/g, '')
+      } else {
+        do {
+          phoneNumber = await question(chalk.bgBlack(chalk.bold.greenBright(
+            `⚡ Ingrese el número de WhatsApp.\n${chalk.yellowBright(`Ej: +50433191934`)}\n${chalk.magentaBright('---> ')}`
+          )))
+          phoneNumber = phoneNumber.replace(/\D/g, '')
+          if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
+        } while (!await isValidPhoneNumber(phoneNumber))
+        rl.close()
+        addNumber = phoneNumber.replace(/\D/g, '')
       }
-    }
 
-    await waitConnectionOpen
+      console.log(chalk.yellow(`⏳ Conectando con WhatsApp...`))
 
-    try {
-      let codeBot = await conn.requestPairingCode(`+${addNumber}`)
-      codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
-      console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN `)), chalk.white(codeBot))
-      console.log(chalk.yellowBright('📲 Revisa tu WhatsApp, debe llegarte la notificación de emparejamiento.'))
-    } catch (e) {
-      console.error(chalk.redBright('❌ Error al generar el código de emparejamiento:'), e)
+      // Esperar conexión abierta antes de solicitar el código
+      const waitConnectionOpen = new Promise((resolve) => {
+        conn.ev.on('connection.update', ({ connection }) => {
+          if (connection === 'open') {
+            console.log(chalk.greenBright('✅ Conexión establecida con WhatsApp'))
+            resolve(true)
+          }
+        })
+      })
+
+      // Forzar conexión si no está abierta
+      if (conn.ws?.readyState !== 1) {
+        try {
+          await conn.connect()
+        } catch (err) {
+          console.error(chalk.redBright('❌ Error al conectar con WhatsApp:'), err)
+          return
+        }
+      }
+
+      await waitConnectionOpen
+
+      try {
+        let codeBot = await conn.requestPairingCode(`+${addNumber}`)
+        codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
+        console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN `)), chalk.white(codeBot))
+        console.log(chalk.yellowBright('📲 Revisa tu WhatsApp, debe llegarte la notificación de emparejamiento.'))
+      } catch (e) {
+        console.error(chalk.redBright('❌ Error al generar el código de emparejamiento:'), e)
+      }
     }
   }
 }
