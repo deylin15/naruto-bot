@@ -281,4 +281,5 @@ async function joinChannels(conn) {
   for (const channelId of Object.values(global.ch || {})) {
     await conn.newsletterFollow(channelId).catch(() => {})
   }
+ }
 }
