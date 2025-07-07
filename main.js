@@ -213,9 +213,17 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
     }
 
     try {
-      console.log(chalk.bold.yellow(`⌛ Conectando con WhatsApp...`))
-      await new Promise(resolve => setTimeout(resolve, 3000)) // Esperar 3 segundos
+      console.log(chalk.bold.yellow(`⌛ Esperando conexión con WhatsApp...`))
 
+      // Esperar que conexión esté abierta
+      await new Promise((resolve, reject) => {
+        conn.ev.on('connection.update', ({ connection }) => {
+          if (connection === 'open') resolve()
+          if (connection === 'close') reject(new Error('❌ No se pudo conectar con WhatsApp.'))
+        })
+      })
+
+      // Una vez conectado, generar código
       let codeBot = await conn.requestPairingCode(`+${addNumber}`)
       codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
 
