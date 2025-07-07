@@ -116,6 +116,17 @@ const rl = readline.createInterface({
   terminal: true
 })
 
+function redefineConsoleMethod(methodName, filterStrings) {
+  const original = console[methodName]
+  console[methodName] = function (...args) {
+    const msg = args[0]
+    if (typeof msg === 'string' && filterStrings.some(s => msg.includes(atob(s)))) {
+      args[0] = ''
+    }
+    original.apply(console, args)
+  }
+}
+
 const question = (text) => {
   rl.clearLine(rl.input, 0)
   return new Promise((resolve) => {
@@ -129,17 +140,6 @@ const question = (text) => {
 let opcion
 if (methodCodeQR) {
   opcion = '1'
-}
-
-function redefineConsoleMethod(methodName, filterStrings) {
-  const original = console[methodName]
-  console[methodName] = function (...args) {
-    const msg = args[0]
-    if (typeof msg === 'string' && filterStrings.some(s => msg.includes(atob(s)))) {
-      args[0] = ''
-    }
-    original.apply(console, args)
-  }
 }
 
 if (!methodCodeQR && !methodCode && !fs.existsSync(`./${authFile}/creds.json`)) {
