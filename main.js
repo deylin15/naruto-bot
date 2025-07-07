@@ -135,7 +135,7 @@ if (!fs.existsSync(`./${sessions}/creds.json`)) {
         do {
           numero = await question(chalk.green('📱 Ingrese su número de WhatsApp:\nEjemplo: 57300xxxxxxx\n--> '))
           numero = numero.replace(/[^0-9]/g, '')
-        } while (!/^\d+$/.test(numero) || !Object.keys(PHONENUMBER_MCC).some(v => numero.startsWith(v)))
+        } while (!/^\d+$/.test(numero) || !/^(504|57|51|52|1|34|55|591|598|56)/.test(numero))
         rl.close()
       }
 
