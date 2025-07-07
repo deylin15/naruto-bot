@@ -102,130 +102,133 @@ global.loadDatabase = async function loadDatabase() {
 
 await global.loadDatabase()
 
-// 🔗 Manejador de conexiones global
-global.conns = global.conns instanceof Array ? global.conns : []
+global.conns = Array.isArray(global.conns) ? global.conns : []
+
 if (global.conns.length) {
   console.log(chalk.green('✅ Conexiones globales restauradas'))
 } else {
   console.log(chalk.yellow('🟡 Inicializando nuevas conexiones...'))
-};
-
-global.creds = 'creds.json'
-global.authFile = 'YukiSession'
-global.authFileJB  = 'YukiJadiBot'
-/*global.rutaBot = join(__dirname, authFile)
-global.rutaJadiBot = join(__dirname, authFileJB)
-
-if (!fs.existsSync(rutaJadiBot)) {
-fs.mkdirSync(rutaJadiBot)
 }
-*/
-const {state, saveState, saveCreds} = await useMultiFileAuthState(global.authFile)
-const msgRetryCounterMap = (MessageRetryMap) => { }
+
+// Variables de autenticación
+global.creds = 'creds.json'
+global.authFile = 'NarutoSession'
+const { state, saveState, saveCreds } = await useMultiFileAuthState(global.authFile)
+
+const msgRetryCounterMap = (MessageRetryMap) => {}
 const msgRetryCounterCache = new NodeCache()
-const {version} = await fetchLatestBaileysVersion()
+const { version } = await fetchLatestBaileysVersion()
+
 let phoneNumber = global.botNumberCode
-const methodCodeQR = process.argv.includes("qr")
-const methodCode = !!phoneNumber || process.argv.includes("code")
-const MethodMobile = process.argv.includes("mobile")
-let rl = readline.createInterface({
-input: process.stdin,
-output: process.stdout,
-terminal: true,
+const methodCodeQR = process.argv.includes('qr')
+const methodCode = !!phoneNumber || process.argv.includes('code')
+const MethodMobile = process.argv.includes('mobile')
+
+// Consola interactiva
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: true
 })
 
-const question = (texto) => {
-rl.clearLine(rl.input, 0)
-return new Promise((resolver) => {
-rl.question(texto, (respuesta) => {
-rl.clearLine(rl.input, 0)
-resolver(respuesta.trim())
-})})
+const question = (text) => {
+  rl.clearLine(rl.input, 0)
+  return new Promise((resolve) => {
+    rl.question(text, (answer) => {
+      rl.clearLine(rl.input, 0)
+      resolve(answer.trim())
+    })
+  })
 }
 
+// Selección de método
 let opcion
 if (methodCodeQR) {
-opcion = '1'
-}
-if (!methodCodeQR && !methodCode && !fs.existsSync(`./${authFile}/creds.json`)) {
-do {
-let lineM = '┄╴───┈┈┈┈──┈┈┈┈───┈╴♡'
-opcion = await question(`╭${lineM}  
-│ ${chalk.blueBright('╭┄┈┅┈┄┈┅┈┄┅┈┄┈┅┄┈┅┈┄')}
-│ ${chalk.blueBright('┊')} ${chalk.blue.bgBlue.bold.cyan("MÉTODO DE VINCULACIÓN")}
-│ ${chalk.blueBright('╰┄┈┅┈┄┈┅┈┄┅┈┄┈┅┄┈┅┈┄')}   
-│ ${chalk.blueBright('╭┄┈┅┈┄┈┅┈┄┅┈┄┈┅┄┈┅┈┄')}     
-│ ${chalk.blueBright('┊')} ${chalk.bold.redBright(`⇢  Opción 1:`)} ${chalk.greenBright("Código QR")}
-│ ${chalk.blueBright('┊')} ${chalk.bold.redBright(`⇢  Opción 2:`)} ${chalk.greenBright("Codígo de 8 digitos")}
-│ ${chalk.blueBright('╰┄┈┅┈┄┈┅┈┄┅┈┄┈┅┄┈┅┈┄')}
-│ ${chalk.blueBright('╭┄┈┅┈┄┈┅┈┄┅┈┄┈┅┄┈┅┈┄')}     
-│ ${chalk.blueBright('┊')} ${chalk.italic.magenta("Escriba solo el numero de")}
-│ ${chalk.blueBright('┊')} ${chalk.italic.magenta("La opcion para conectarse")}
-│ ${chalk.blueBright('╰┄┈┅┈┄┈┅┈┄┅┈┄┈┅┄┈┅┈┄')} 
-│ ${chalk.italic.red(`𝒴𝓊𝓀𝒾_𝒮𝓊𝑜𝓊-𝐵𝑜𝓉 🌹`)}
-╰${lineM}\n${chalk.bold.magentaBright('---> ')}`)
-if (!/^[1-2]$/.test(opcion)) {
-console.log(chalk.bold.redBright(`NO SE PERMITE NÚMEROS QUE NO SEAN ${chalk.bold.greenBright("1")} O ${chalk.bold.greenBright("2")}, TAMPOCO LETRAS O SÍMBOLOS ESPECIALES.\n${chalk.bold.yellowBright("CONSEJO: COPIE EL NÚMERO DE LA OPCIÓN Y PÉGUELO EN LA CONSOLA.")}`))
-}} while (opcion !== '1' && opcion !== '2' || fs.existsSync(`./${authFile}/creds.json`))
+  opcion = '1'
 }
 
+if (!methodCodeQR && !methodCode && !fs.existsSync(`./${authFile}/creds.json`)) {
+  do {
+    opcion = await question(`
+${chalk.blueBright('╭─')} ${chalk.bgBlue(' MÉTODO DE VINCULACIÓN ')} ${chalk.blueBright('─╮')}
+${chalk.cyanBright('│')} ${chalk.bold('1')} - Escanear código QR
+${chalk.cyanBright('│')} ${chalk.bold('2')} - Ingresar número y generar código
+${chalk.blueBright('╰────────────────────────╯')}
+${chalk.magentaBright('Escribe una opción (1 o 2):')}
+${chalk.bold('---> ')}
+    `)
+
+    if (!/^[1-2]$/.test(opcion)) {
+      console.log(chalk.redBright(`⚠️  Opción inválida. Solo puedes ingresar ${chalk.greenBright('1')} o ${chalk.greenBright('2')}.`))
+    }
+  } while (!['1', '2'].includes(opcion) || fs.existsSync(`./${authFile}/creds.json`))
+}
+
+// Silenciar logs innecesarios
 const filterStrings = [
-"Q2xvc2luZyBzdGFsZSBvcGVu", // "Closing stable open"
-"Q2xvc2luZyBvcGVuIHNlc3Npb24=", // "Closing open session"
-"RmFpbGVkIHRvIGRlY3J5cHQ=", // "Failed to decrypt"
-"U2Vzc2lvbiBlcnJvcg==", // "Session error"
-"RXJyb3I6IEJhZCBNQUM=", // "Error: Bad MAC" 
-"RGVjcnlwdGVkIG1lc3NhZ2U=" // "Decrypted message" 
+  "Q2xvc2luZyBzdGFsZSBvcGVu", "Q2xvc2luZyBvcGVuIHNlc3Npb24=",
+  "RmFpbGVkIHRvIGRlY3J5cHQ=", "U2Vzc2lvbiBlcnJvcg==",
+  "RXJyb3I6IEJhZCBNQUM=", "RGVjcnlwdGVkIG1lc3NhZ2U="
 ]
-console.info = () => {} 
-console.debug = () => {} 
-['log', 'warn', 'error'].forEach(methodName => redefineConsoleMethod(methodName, filterStrings))
+
+console.info = () => {}
+console.debug = () => {}
+['log', 'warn', 'error'].forEach(m => redefineConsoleMethod(m, filterStrings))
+
+// Configuración de conexión
 const connectionOptions = {
-logger: pino({ level: 'silent' }),
-printQRInTerminal: opcion == '1' ? true : methodCodeQR ? true : false,
-mobile: MethodMobile, 
-browser: opcion == '1' ? ['Yuki_Suou-Bot', 'Edge', '20.0.04'] : methodCodeQR ? ['Yuki_Suou-Bot', 'Edge', '20.0.04'] : ["Ubuntu", "Chrome", "20.0.04"],
-auth: {
-creds: state.creds,
-keys: makeCacheableSignalKeyStore(state.keys, Pino({ level: "fatal" }).child({ level: "fatal" })),
-},
-markOnlineOnConnect: true, 
-generateHighQualityLinkPreview: true, 
-syncFullHistory: false,
-getMessage: async (clave) => {
-let jid = jidNormalizedUser(clave.remoteJid)
-let msg = await store.loadMessage(jid, clave.id)
-return msg?.message || ""
-},
-msgRetryCounterCache, // Resolver mensajes en espera
-msgRetryCounterMap, // Determinar si se debe volver a intentar enviar un mensaje o no
-defaultQueryTimeoutMs: undefined,
-version: [2, 3000, 1015901307],
+  logger: pino({ level: 'silent' }),
+  printQRInTerminal: opcion === '1' || methodCodeQR,
+  mobile: MethodMobile,
+  browser: ['Naruto-Bot', 'Edge', '20.0.04'],
+  auth: {
+    creds: state.creds,
+    keys: makeCacheableSignalKeyStore(state.keys, Pino({ level: "fatal" }).child({ level: "fatal" })),
+  },
+  markOnlineOnConnect: true,
+  generateHighQualityLinkPreview: true,
+  syncFullHistory: false,
+  getMessage: async (key) => {
+    const jid = jidNormalizedUser(key.remoteJid)
+    const msg = await store.loadMessage(jid, key.id)
+    return msg?.message || ""
+  },
+  msgRetryCounterCache,
+  msgRetryCounterMap,
+  defaultQueryTimeoutMs: undefined,
+  version: [2, 3000, 1015901307],
 }
+
+// Crear conexión principal
 global.conn = makeWASocket(connectionOptions)
-if (!fs.existsSync(`./${authFile}/creds.json`)) {
-if (opcion === '2' || methodCode) {
-opcion = '2'
-if (!conn.authState.creds.registered) {
-let addNumber
-if (!!phoneNumber) {
-addNumber = phoneNumber.replace(/[^0-9]/g, '')
-} else {
-do {
-phoneNumber = await question(chalk.bgBlack(chalk.bold.greenBright(`Por favor, Ingrese el número de WhatsApp.\n${chalk.bold.yellowBright("CONSEJO: Copie el número de WhatsApp y péguelo en la consola.")}\n${chalk.bold.yellowBright("Ejemplo: +54123456789")}\n${chalk.bold.magentaBright('---> ')}`)))
-phoneNumber = phoneNumber.replace(/\D/g,'')
-if (!phoneNumber.startsWith('+')) {
-phoneNumber = `+${phoneNumber}`
-}
-} while (!await isValidPhoneNumber(phoneNumber))
-rl.close()
-addNumber = phoneNumber.replace(/\D/g, '')
-setTimeout(async () => {
-let codeBot = await conn.requestPairingCode(addNumber)
-codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
-console.log(chalk.bold.white(chalk.bgMagenta('CÓDIGO DE VINCULACIÓN:')), chalk.bold.white(chalk.white(codeBot)))
-}, 2000)
-}}}
+
+// Si no hay sesión aún, generar código de emparejamiento
+if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
+  opcion = '2'
+
+  if (!conn.authState.creds.registered) {
+    let addNumber
+
+    if (!!phoneNumber) {
+      addNumber = phoneNumber.replace(/[^0-9]/g, '')
+    } else {
+      do {
+        phoneNumber = await question(chalk.greenBright(`\n💬 Ingrese el número de WhatsApp (Ej: +54123456789):\n${chalk.bold('---> ')}`))
+        phoneNumber = phoneNumber.replace(/\D/g, '')
+        if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
+      } while (!await isValidPhoneNumber(phoneNumber))
+
+      rl.close()
+      addNumber = phoneNumber.replace(/\D/g, '')
+    }
+
+    // Solicitar código de emparejamiento
+    setTimeout(async () => {
+      let code = await conn.requestPairingCode(addNumber)
+      code = code?.match(/.{1,4}/g)?.join('-') || code
+      console.log(chalk.bold.bgMagenta.white(' CÓDIGO DE EMPAREJAMIENTO: '), chalk.bold.white(code))
+    }, 2000)
+  }
 }
 
 conn.isInit = false
