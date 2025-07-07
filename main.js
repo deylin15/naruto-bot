@@ -388,7 +388,7 @@ async function filesInit() {
 filesInit().then(() => Object.keys(global.plugins)).catch(console.error)
 
 global.reload = async (_ev, filename) => {
-  if (!pluginFilter(filename)) return
+  if (!pluginFilter(filename)) return;
 
   const dir = global.__filename(join(pluginFolder, filename), true)
 
@@ -419,15 +419,14 @@ global.reload = async (_ev, filename) => {
   } catch (e) {
     conn.logger.error(`❌ Error al recargar plugin '${filename}':\n${format(e)}`)
   } finally {
-    // Ordena plugins por nombre
     global.plugins = Object.fromEntries(
       Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b))
     )
   }
 }
 
-Object.freeze(global.reload);
-watch(pluginFolder, global.reload);
+Object.freeze(global.reload)
+watch(pluginFolder, global.reload)
 await global.reloadHandler();
 
 async function _quickTest() {
