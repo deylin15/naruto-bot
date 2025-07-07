@@ -197,25 +197,38 @@ let handler = await import('./handler.js')
 global.reloadHandler = async function (restartConn) {
   try {
     const newHandler = await import(`./handler.js?update=${Date.now()}`)
+
     if (newHandler && typeof newHandler.default === 'function') {
       handler = newHandler
     } else {
       console.error('❌ handler.js no exporta una función por defecto válida.')
       return
     }
+
   } catch (e) {
     console.error('❌ Error al recargar el handler:', e)
+    return
   }
 
-  if (restartConn) {
-    const oldChats = global.conn.chats
+  if (restartConn && global.conn) {
+    const oldChats = global.conn.chats || {}
+
     try { global.conn.ws.close() } catch {}
     conn.ev.removeAllListeners()
-    global.conn = makeWASocket(connectionOptions, { chats: oldChats })
+
+    global.conn = makeWASocket(connectionOptions)
+    global.conn.chats = oldChats
   }
 
+  // 💥 Aquí verifica esto
+  if (typeof handler.default !== 'function') {
+    console.error('❌ handler.default no es una función')
+    return
+  }
+console.log('[DEBUG] handler.default:', typeof handler.default)
+
   conn.ev.removeAllListeners()
-  conn.ev.on('messages.upsert', handler.default)
+  conn.ev.on('messages.upsert', handler.default) // ✅ sólo si es función
   conn.ev.on('connection.update', connectionUpdate)
   conn.ev.on('creds.update', saveState)
 }
