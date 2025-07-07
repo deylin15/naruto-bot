@@ -317,93 +317,107 @@ async function connectionUpdate(update) {
 
 process.on('uncaughtException', console.error)
 
-(async () => {
-global.conns = [];
+;(async () => {
+  global.conns = []
 
-const mainBotAuthFile = 'YukiSession';
-try {
-const mainBot = await connectionUpdate(mainBotAuthFile);
-global.conns.push(mainBot);
-console.log(chalk.bold.greenBright(`🍒 Yuki Suou conectado correctamente.`))
+  const mainBotAuthFile = 'NarutoSession'
+  try {
+    const mainBot = await connectionUpdate(mainBotAuthFile)
+    global.conns.push(mainBot)
+    console.log(chalk.bold.greenBright(`🍥 Naruto-Bot conectado correctamente.`))
+  } catch (error) {
+    console.error(chalk.bold.redBright(`❌ Error al iniciar Naruto-Bot: `), error)
+  }
+})()
 
-await connectSubBots();
-} catch (error) {
-console.error(chalk.bold.cyanBright(`🥀 Error al iniciar Yuki_Suou-Bot: `, error))
-}
-})();
+let isInit = true
+let handler = await import('./handler.js')
 
-let isInit = true;
-let handler = await import('./handler.js');
-global.reloadHandler = async function(restatConn) {
-try {
-const Handler = await import(`./handler.js?update=${Date.now()}`).catch(console.error);
-if (Object.keys(Handler || {}).length) handler = Handler;
-} catch (e) {
-console.error(e);
-}
-if (restatConn) {
-const oldChats = global.conn.chats;
-try {
-global.conn.ws.close();
-} catch { }
-conn.ev.removeAllListeners();
-global.conn = makeWASocket(connectionOptions, {chats: oldChats});
-isInit = true;
-}
-if (!isInit) {
-conn.ev.off('messages.upsert', conn.handler)
-conn.ev.off('connection.update', conn.connectionUpdate)
-conn.ev.off('creds.update', conn.credsUpdate)
-}
+global.reloadHandler = async function (restatConn) {
+  try {
+    const Handler = await import(`./handler.js?update=${Date.now()}`).catch(console.error)
+    if (Object.keys(Handler || {}).length) handler = Handler
+  } catch (e) {
+    console.error(e)
+  }
 
-conn.handler = handler.handler.bind(global.conn)
-conn.connectionUpdate = connectionUpdate.bind(global.conn)
-conn.credsUpdate = saveCreds.bind(global.conn, true)
+  if (restatConn) {
+    const oldChats = global.conn.chats
+    try { global.conn.ws.close() } catch {}
+    conn.ev.removeAllListeners()
+    global.conn = makeWASocket(connectionOptions, { chats: oldChats })
+    isInit = true
+  }
 
-const currentDateTime = new Date()
-const messageDateTime = new Date(conn.ev)
-if (currentDateTime >= messageDateTime) {
-const chats = Object.entries(conn.chats).filter(([jid, chat]) => !jid.endsWith('@g.us') && chat.isChats).map((v) => v[0])
-} else {
-const chats = Object.entries(conn.chats).filter(([jid, chat]) => !jid.endsWith('@g.us') && chat.isChats).map((v) => v[0])}
+  if (!isInit) {
+    conn.ev.off('messages.upsert', conn.handler)
+    conn.ev.off('connection.update', conn.connectionUpdate)
+    conn.ev.off('creds.update', conn.credsUpdate)
+  }
 
-conn.ev.on('messages.upsert', conn.handler)
-conn.ev.on('connection.update', conn.connectionUpdate)
-conn.ev.on('creds.update', conn.credsUpdate)
-isInit = false
-return true
+  conn.handler = handler.handler.bind(global.conn)
+  conn.connectionUpdate = connectionUpdate.bind(global.conn)
+  conn.credsUpdate = saveCreds.bind(global.conn, true)
+
+  conn.ev.on('messages.upsert', conn.handler)
+  conn.ev.on('connection.update', conn.connectionUpdate)
+  conn.ev.on('creds.update', conn.credsUpdate)
+
+  isInit = false
+  return true
 }
 
+// Carga dinámica de plugins
 const pluginFolder = global.__dirname(join(__dirname, './plugins/index'))
 const pluginFilter = (filename) => /\.js$/.test(filename)
 global.plugins = {}
+
 async function filesInit() {
-for (const filename of readdirSync(pluginFolder).filter(pluginFilter)) {
-try {
-const file = global.__filename(join(pluginFolder, filename))
-const module = await import(file)
-global.plugins[filename] = module.default || module
-} catch (e) {
-conn.logger.error(e)
-delete global.plugins[filename]
-}}}
-filesInit().then((_) => Object.keys(global.plugins)).catch(console.error)
+  for (const filename of readdirSync(pluginFolder).filter(pluginFilter)) {
+    try {
+      const file = global.__filename(join(pluginFolder, filename))
+      const module = await import(file)
+      global.plugins[filename] = module.default || module
+    } catch (e) {
+      conn.logger.error(e)
+      delete global.plugins[filename]
+    }
+  }
+}
+
+filesInit().then(() => Object.keys(global.plugins)).catch(console.error)
 
 global.reload = async (_ev, filename) => {
-if (pluginFilter(filename)) {
-const dir = global.__filename(join(pluginFolder, filename), true)
-if (filename in global.plugins) {
-if (existsSync(dir)) conn.logger.info(` SE ACTULIZADO - '${filename}' CON ÉXITO`)
-else {
-conn.logger.warn(`SE ELIMINO UN ARCHIVO : '${filename}'`)
-return delete global.plugins[filename];
+  if (pluginFilter(filename)) {
+    const dir = global.__filename(join(pluginFolder, filename), true)
+    if (filename in global.plugins) {
+      if (existsSync(dir)) {
+        conn.logger.info(`✅ Plugin actualizado: '${filename}'`)
+      } else {
+        conn.logger.warn(`🗑 Plugin eliminado: '${filename}'`)
+        return delete global.plugins[filename]
+      }
+    } else {
+      conn.logger.info(`🆕 Nuevo plugin detectado: '${filename}'`)
+    }
+
+    const err = syntaxerror(readFileSync(dir), filename, {
+      sourceType: 'module',
+      allowAwaitOutsideFunction: true
+    })
+
+    if (err) {
+      conn.logger.error(`🛑 Error de sintaxis en '${filename}':\n${format(err)}`)
+    } else {
+      try {
+        const module = await import(`${pathToFileURL(dir)}?update=${Date.now()}`)
+        global.plugins[filename] = module.default || module
+      } catch (e) {
+        conn.logger.error(`❌ Error al recargar plugin '${filename}':`, e)
+      }
+    }
+  }
 }
-} else conn.logger.info(`SE DETECTO UN NUEVO PLUGINS : '${filename}'`)
-const err = syntaxerror(readFileSync(dir), filename, {
-sourceType: 'module',
-allowAwaitOutsideFunction: true,
-});
-if (err) conn.logger.error(`SE DETECTO UN ERROR DE SINTAXIS | SYNTAX ERROR WHILE LOADING '${filename}'\n${format(err)}`);
 else {
 try {
 const module = (await import(`${global.__filename(dir)}?update=${Date.now()}`));
