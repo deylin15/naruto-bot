@@ -13,7 +13,7 @@ clearTimeout(this)
 resolve()
 }, ms))
 
-export async function handler(chatUpdate) {
+export default async function handler(chatUpdate) {
 this.msgqueque = this.msgqueque || []
 this.uptime = this.uptime || Date.now()
 if (!chatUpdate)
