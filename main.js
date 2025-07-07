@@ -128,15 +128,16 @@ if (!fs.existsSync(`./${sessions}/creds.json`)) {
   if (opcion === '2' || methodCode) {
     opcion = '2'
     if (!conn.authState.creds.registered) {
-      let numero
-      if (phoneNumber) {
-        numero = phoneNumber.replace(/[^0-9]/g, '')
-      } else {
-        do {
-          numero = await question(chalk.green('📱 Ingrese su número de WhatsApp:\nEjemplo: 57300xxxxxxx\n--> '))
-          numero = numero.replace(/[^0-9]/g, '')
-        } while (!/^\d+$/.test(numero) || !/^(504|57|51|52|1|34|55|591|598|56)/.test(numero))
-        rl.close()
+  let numero
+  if (phoneNumber) {
+    numero = phoneNumber.replace(/[^0-9]/g, '')
+  } else {
+    do {
+      numero = await question(chalk.green('📱 Ingrese su número de WhatsApp:\nEjemplo: 57300xxxxxxx\n--> '))
+      numero = numero.replace(/[^0-9]/g, '')
+    } while (!/^\d+$/.test(numero) || !/^(504|57|51|52|1|34|55|591|598|56)/.test(numero))
+  }
+  rl.close() 
       }
 
       setTimeout(async () => {
@@ -161,10 +162,11 @@ async function connectionUpdate(update) {
   const reason = new Boom(lastDisconnect?.error)?.output?.statusCode
   if (connection === 'close') {
     switch (reason) {
-      case DisconnectReason.badSession:
-      case DisconnectReason.loggedOut:
-        console.log(chalk.red('❌ Sesión inválida. Elimina la carpeta de sesión y vuelve a conectarte.'))
-        break
+  case DisconnectReason.badSession:
+  case DisconnectReason.loggedOut:
+    console.log(chalk.red('❌ Sesión inválida. Elimina la carpeta de sesión y vuelve a conectarte.'))
+    process.exit() // <- Finaliza ejecución
+    break
       case DisconnectReason.connectionClosed:
       case DisconnectReason.connectionLost:
       case DisconnectReason.connectionReplaced:
@@ -200,15 +202,16 @@ global.reloadHandler = async function (restartConn) {
   }
 
   if (restartConn) {
-    const oldChats = global.conn.chats
-    try { global.conn.ws.close() } catch {}
-    conn.ev.removeAllListeners()
-    global.conn = makeWASocket(connectionOptions, { chats: oldChats })
-  }
+  const oldChats = global.conn.chats
+  try { global.conn.ws.close() } catch {}
+  conn.ev.removeAllListeners() // <- Borra anteriores
+  global.conn = makeWASocket(connectionOptions, { chats: oldChats })
+}
 
-  conn.ev.on('messages.upsert', handler.default || handler)
-  conn.ev.on('connection.update', connectionUpdate)
-  conn.ev.on('creds.update', saveState)
+conn.ev.removeAllListeners() // <- Asegura que no haya duplicados
+conn.ev.on('messages.upsert', handler.default || handler)
+conn.ev.on('connection.update', connectionUpdate)
+conn.ev.on('creds.update', saveState)
 }
 await global.reloadHandler()
 
