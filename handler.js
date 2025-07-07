@@ -544,7 +544,7 @@ if (!m.fromMe) return this.sendMessage(m.chat, { react: { text: emot, key: m.key
 function pickRandom(list) { return list[Math.floor(Math.random() * list.length)]}
 }}
 
-//export default handler
+export default handler
 
 export async function deleteUpdate(message) {
   try {
