@@ -197,34 +197,41 @@ global.conn = makeWASocket(connectionOptions)
 if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
   let addNumber
 
-  if (!!phoneNumber) {
-    addNumber = phoneNumber.replace(/[^0-9]/g, '')
-  } else {
-    do {
+  const pedirNumero = async () => {
+    while (true) {
       phoneNumber = await question(chalk.greenBright(`\n💬 Ingrese el número de WhatsApp (Ej: +54123456789):\n${chalk.bold('---> ')}`))
       phoneNumber = phoneNumber.replace(/\D/g, '')
       if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
-    } while (!await isValidPhoneNumber(phoneNumber))
 
+      const valido = await isValidPhoneNumber(phoneNumber)
+      if (valido) break
+
+      console.log(chalk.redBright('⚠️ Número inválido. Intenta nuevamente.'))
+    }
     rl.close()
     addNumber = phoneNumber.replace(/\D/g, '')
   }
 
-  conn.ev.on('connection.update', async (update) => {
-    const { connection } = update
-    if (connection === 'open') {
-      console.log(chalk.greenBright('✅ Conexión abierta. Esperando 5 segundos...'))
+  await pedirNumero()
 
-      setTimeout(async () => {
-        try {
-          let code = await conn.requestPairingCode(addNumber)
-          code = code?.match(/.{1,4}/g)?.join('-') || code
-          console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
-          console.log(chalk.yellow('📲 Abre WhatsApp y verifica la notificación para emparejar el código.'))
-        } catch (e) {
-          console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
-        }
-      }, 5000) // Espera 5 segundos antes de generar el código
+  conn.ev.on('connection.update', async ({ connection, lastDisconnect }) => {
+    if (connection === 'open') {
+      console.log(chalk.greenBright('✅ Conexión abierta. Generando código de emparejamiento...'))
+
+      try {
+        let code = await conn.requestPairingCode(addNumber)
+        code = code?.match(/.{1,4}/g)?.join('-') || code
+        console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
+        console.log(chalk.yellow('📲 Revisa tu WhatsApp. Deberías recibir una notificación para emparejar el código.'))
+      } catch (e) {
+        console.error(chalk.redBright('❌ Error generando código de emparejamiento:'), e)
+      }
+    } else if (connection === 'close') {
+      const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut
+      if (shouldReconnect) {
+        console.log(chalk.yellowBright('⚠️ Reintentando conexión...'))
+        global.conn = makeWASocket(connectionOptions)
+      }
     }
   })
 }
