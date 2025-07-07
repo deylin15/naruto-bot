@@ -31,11 +31,11 @@ const { chain } = lodash
 const { CONNECTING } = ws
 const PORT = process.env.PORT || process.env.SERVER_PORT || 3000
 
-// 🧠 Inicializa funciones de Baileys
+
 protoType()
 serialize()
 
-// 🌐 Funciones globales útiles
+
 global.__filename = (pathURL = import.meta.url, rmPrefix = platform !== 'win32') =>
   rmPrefix ? fileURLToPath(pathURL) : pathToFileURL(pathURL).toString()
 
@@ -44,7 +44,7 @@ global.__require = dir => createRequire(dir)
 
 const __dirname = global.__dirname(import.meta.url)
 
-// 🌐 API global
+
 global.API = (name, route = '/', query = {}, key) => {
   const base = name in global.APIs ? global.APIs[name] : name
   const q = key
@@ -53,14 +53,14 @@ global.API = (name, route = '/', query = {}, key) => {
   return base + route + (Object.keys(q).length ? '?' + new URLSearchParams(q) : '')
 }
 
-// ⚙️ Opciones CLI
+
 global.opts = yargs(process.argv.slice(2)).exitProcess(false).parse()
 global.prefix = new RegExp(
   '^[' + (opts.prefix || '*/i!#$%+£¢€¥^°=¶∆×÷π√✓©®&.\\-.@')
     .replace(/[|\\{}()[\]^$+*.\-\^]/g, '\\$&') + ']'
 )
 
-// 🗂 Base de datos principal
+
 global.db = new Low(
   /^https?:\/\//.test(opts.db || '')
     ? new cloudDBAdapter(opts.db)
@@ -110,7 +110,7 @@ if (global.conns.length) {
   console.log(chalk.yellow('🟡 Inicializando nuevas conexiones...'))
 }
 
-// Variables de autenticación
+
 global.creds = 'creds.json'
 global.authFile = 'NarutoSession'
 const { state, saveState, saveCreds } = await useMultiFileAuthState(global.authFile)
@@ -124,7 +124,7 @@ const methodCodeQR = process.argv.includes('qr')
 const methodCode = !!phoneNumber || process.argv.includes('code')
 const MethodMobile = process.argv.includes('mobile')
 
-// Consola interactiva
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -141,7 +141,7 @@ const question = (text) => {
   })
 }
 
-// Selección de método
+
 let opcion
 if (methodCodeQR) {
   opcion = '1'
@@ -164,7 +164,7 @@ ${chalk.bold('---> ')}
   } while (!['1', '2'].includes(opcion) || fs.existsSync(`./${authFile}/creds.json`))
 }
 
-// Silenciar logs innecesarios
+
 const filterStrings = [
   "Q2xvc2luZyBzdGFsZSBvcGVu", "Q2xvc2luZyBvcGVuIHNlc3Npb24=",
   "RmFpbGVkIHRvIGRlY3J5cHQ=", "U2Vzc2lvbiBlcnJvcg==",
@@ -175,7 +175,7 @@ console.info = () => {}
 console.debug = () => {}
 ['log', 'warn', 'error'].forEach(m => redefineConsoleMethod(m, filterStrings))
 
-// Configuración de conexión
+
 const connectionOptions = {
   logger: pino({ level: 'silent' }),
   printQRInTerminal: opcion === '1' || methodCodeQR,
@@ -199,10 +199,10 @@ const connectionOptions = {
   version: [2, 3000, 1015901307],
 }
 
-// Crear conexión principal
+
 global.conn = makeWASocket(connectionOptions)
 
-// Si no hay sesión aún, generar código de emparejamiento
+
 if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
   opcion = '2'
 
@@ -367,7 +367,7 @@ global.reloadHandler = async function (restatConn) {
   return true
 }
 
-// Carga dinámica de plugins
+
 const pluginFolder = global.__dirname(join(__dirname, './plugins/index'))
 const pluginFilter = (filename) => /\.js$/.test(filename)
 global.plugins = {}
@@ -500,14 +500,14 @@ function redefineConsoleMethod(methodName, filterStrings) {
   }
 }
 
-// Limpieza cada 4 minutos
+
 setInterval(() => {
   if (stopped === 'close' || !conn || !conn.user) return
   clearTmp()
   console.log(chalk.bold.cyanBright(`\n🌀 TMP LIMPIADO: Archivos temporales eliminados.`))
 }, 1000 * 60 * 4)
 
-// Limpieza de claves antiguas cada 10 minutos
+
 setInterval(() => {
   if (stopped === 'close' || !conn || !conn.user) return
   purgeOldFiles()
