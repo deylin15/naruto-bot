@@ -195,7 +195,6 @@ const connectionOptions = {
 global.conn = makeWASocket(connectionOptions)
 
 if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
-  opcion = '2'
 
   if (!conn.authState.creds.registered) {
   let addNumber
