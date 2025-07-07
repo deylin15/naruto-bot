@@ -138,7 +138,7 @@ if (!fs.existsSync(`./${sessions}/creds.json`)) {
     } while (!/^\d+$/.test(numero) || !/^(504|57|51|52|1|34|55|591|598|56)/.test(numero))
   }
   rl.close() 
-      }
+      
 
       setTimeout(async () => {
         let code = await conn.requestPairingCode(numero)
