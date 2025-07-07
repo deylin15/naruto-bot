@@ -208,11 +208,11 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
         phoneNumber = phoneNumber.replace(/\D/g, '')
         if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
       } while (!await isValidPhoneNumber(phoneNumber))
-      rl.close()
       addNumber = phoneNumber.replace(/\D/g, '')
+      rl.close()
     }
 
-    // Esperar a que conexión esté completamente abierta antes de generar código
+    // Esperar a que la conexión esté abierta
     conn.ev.on('connection.update', async ({ connection }) => {
       if (connection === 'open') {
         console.log(chalk.greenBright('✅ Conexión establecida con WhatsApp.'))
@@ -226,7 +226,7 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
           } catch (e) {
             console.error(chalk.redBright('❌ Error al generar el código de emparejamiento:'), e)
           }
-        }, 3000) // Espera para asegurar que la conexión esté lista
+        }, 3000)
       }
     })
   }
