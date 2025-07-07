@@ -131,6 +131,17 @@ if (methodCodeQR) {
   opcion = '1'
 }
 
+function redefineConsoleMethod(methodName, filterStrings) {
+  const original = console[methodName]
+  console[methodName] = function (...args) {
+    const msg = args[0]
+    if (typeof msg === 'string' && filterStrings.some(s => msg.includes(atob(s)))) {
+      args[0] = ''
+    }
+    original.apply(console, args)
+  }
+}
+
 if (!methodCodeQR && !methodCode && !fs.existsSync(`./${authFile}/creds.json`)) {
   do {
     opcion = await question(`
