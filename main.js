@@ -260,67 +260,71 @@ global.reloadHandler = async function (restatConn) {
   return true
 }
 
-const path = pathToFileURL('./plugins/index')
+
+const pluginFolder = join(__dirname(import.meta.url), './plugins')
 const pluginFilter = (filename) => /\.js$/.test(filename)
 global.plugins = {}
+
 
 async function filesInit() {
   for (const filename of readdirSync(pluginFolder).filter(pluginFilter)) {
     try {
-      const file = global.__filename(join(pluginFolder, filename))
+      const file = pathToFileURL(join(pluginFolder, filename)).href
       const module = await import(file)
       global.plugins[filename] = module.default || module
     } catch (e) {
-      conn.logger.error(e)
+      console.error(`❌ Error cargando plugin ${filename}:`, e)
       delete global.plugins[filename]
     }
   }
 }
-filesInit().then(() => Object.keys(global.plugins)).catch(console.error)
+
+
+await filesInit()
+
 
 global.reload = async (_ev, filename) => {
-  if (!pluginFilter(filename)) return;
+  if (!pluginFilter(filename)) return
+  const fullPath = join(pluginFolder, filename)
 
-  const dir = global.__filename(join(pluginFolder, filename), true)
-
-  if (filename in global.plugins) {
-    if (!existsSync(dir)) {
-      conn.logger.warn(`🗑 Plugin eliminado: '${filename}'`)
-      return delete global.plugins[filename]
-    } else {
-      conn.logger.info(`✅ Plugin actualizado: '${filename}'`)
-    }
-  } else {
-    conn.logger.info(`🆕 Nuevo plugin detectado: '${filename}'`)
+  if (!existsSync(fullPath)) {
+    console.log(chalk.redBright(`🗑 Plugin eliminado: '${filename}'`))
+    return delete global.plugins[filename]
   }
 
-  const err = syntaxerror(readFileSync(dir), filename, {
+  const err = syntaxerror(readFileSync(fullPath), filename, {
     sourceType: 'module',
     allowAwaitOutsideFunction: true
   })
 
   if (err) {
-    conn.logger.error(`🛑 Error de sintaxis en '${filename}':\n${format(err)}`)
+    console.error(chalk.redBright(`🛑 Error de sintaxis en '${filename}':\n`), err)
     return
   }
 
   try {
-    const module = await import(`${pathToFileURL(dir)}?update=${Date.now()}`)
-    global.plugins[filename] = module.default || module
+    const updatedModule = await import(`${pathToFileURL(fullPath).href}?update=${Date.now()}`)
+    global.plugins[filename] = updatedModule.default || updatedModule
+    console.log(chalk.greenBright(`♻️ Plugin recargado: '${filename}'`))
   } catch (e) {
-    conn.logger.error(`❌ Error al recargar plugin '${filename}':\n${format(e)}`)
-  } finally {
-    global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)))
+    console.error(chalk.redBright(`❌ Error al recargar '${filename}':\n`), format(e))
   }
 }
+
+
 Object.freeze(global.reload)
+
+
 watch(pluginFolder, global.reload)
-await global.reloadHandler()
+
+
+await filesInit()
+
 
 watchFile(fileURLToPath(import.meta.url), () => {
   unwatchFile(fileURLToPath(import.meta.url))
   console.log(chalk.bold.greenBright("📦 Código actualizado automáticamente."))
-  import(`${fileURLToPath(import.meta.url)}?update=${Date.now()}`)
+  import(`${pathToFileURL(import.meta.url).href}?update=${Date.now()}`)
 })
 
 async function isValidPhoneNumber(number) {
