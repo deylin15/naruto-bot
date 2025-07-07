@@ -198,10 +198,10 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
   let addNumber
 
   if (!!phoneNumber) {
-    addNumber = phoneNumber.replace(/[^0-9]/g, '')
+    addNumber = phoneNumber.replace(/\D/g, '')
   } else {
     do {
-      phoneNumber = await question(chalk.greenBright(`\n💬 Ingrese el número de WhatsApp (Ej: +54123456789):\n${chalk.bold('---> ')}`))
+      phoneNumber = await question(chalk.greenBright(`\n💬 Ingrese el número de WhatsApp (Ej: +50433191934):\n${chalk.bold('---> ')}`))
       phoneNumber = phoneNumber.replace(/\D/g, '')
       if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
     } while (!await isValidPhoneNumber(phoneNumber))
@@ -210,20 +210,19 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
     addNumber = phoneNumber.replace(/\D/g, '')
   }
 
-  // 🔁 Usa conn.ev.on en lugar de once
-  conn.ev.on('connection.update', async (update) => {
-    const { connection } = update
+  // Esperamos a que la conexión esté lista y abierta
+  global.conn.ev.on('connection.update', async ({ connection }) => {
     if (connection === 'open') {
       try {
-        console.log(chalk.greenBright('✅ Conexión abierta. Esperando antes de generar código...'))
+        console.log(chalk.greenBright('✅ Conexión abierta. Generando código...'))
 
-        await new Promise(resolve => setTimeout(resolve, 3000))
+        await new Promise(resolve => setTimeout(resolve, 2500))
 
-        let code = await conn.requestPairingCode(addNumber)
+        let code = await global.conn.requestPairingCode(`+${addNumber}`)
         code = code?.match(/.{1,4}/g)?.join('-') || code
 
         console.log(chalk.bold.bgMagenta.white('\n🔗 CÓDIGO DE EMPAREJAMIENTO:'), chalk.whiteBright(code), '\n')
-        console.log(chalk.yellowBright('📲 Revisa tu WhatsApp. Deberías recibir una notificación de emparejamiento.'))
+        console.log(chalk.yellowBright('📲 Revisa tu WhatsApp. Deberías recibir una notificación para vincular el código.'))
       } catch (e) {
         console.error(chalk.redBright('❌ Error al generar código de emparejamiento:'), e)
       }
