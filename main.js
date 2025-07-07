@@ -197,27 +197,28 @@ global.conn = makeWASocket(connectionOptions)
 if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
   let addNumber
 
-  const pedirNumero = async () => {
-    while (true) {
+  if (!!phoneNumber) {
+    addNumber = phoneNumber.replace(/[^0-9]/g, '')
+  } else {
+    do {
       phoneNumber = await question(chalk.greenBright(`\n💬 Ingrese el número de WhatsApp (Ej: +54123456789):\n${chalk.bold('---> ')}`))
       phoneNumber = phoneNumber.replace(/\D/g, '')
       if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`
+    } while (!await isValidPhoneNumber(phoneNumber))
 
-      const valido = await isValidPhoneNumber(phoneNumber)
-      if (valido) break
-
-      console.log(chalk.redBright('⚠️ Número inválido. Intenta nuevamente.'))
-    }
     rl.close()
     addNumber = phoneNumber.replace(/\D/g, '')
   }
 
-  await pedirNumero()
-
-  conn.ev.once('connection.update', async ({ connection }) => {
+  // 🔁 Usa conn.ev.on en lugar de once
+  conn.ev.on('connection.update', async (update) => {
+    const { connection } = update
     if (connection === 'open') {
       try {
+        console.log(chalk.greenBright('✅ Conexión abierta. Esperando antes de generar código...'))
+
         await new Promise(resolve => setTimeout(resolve, 3000))
+
         let code = await conn.requestPairingCode(addNumber)
         code = code?.match(/.{1,4}/g)?.join('-') || code
 
