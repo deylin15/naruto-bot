@@ -42,7 +42,6 @@ global.__filename = (pathURL = import.meta.url, rmPrefix = platform !== 'win32')
 global.__dirname = pathURL => path.dirname(global.__filename(pathURL, true))
 global.__require = dir => createRequire(dir)
 
-const __dirname = global.__dirname(import.meta.url)
 
 global.API = (name, route = '/', query = {}, key) => {
   const base = name in global.APIs ? global.APIs[name] : name
