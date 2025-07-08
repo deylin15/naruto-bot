@@ -101,7 +101,7 @@ let _user = global.db.data && global.db.data.users && global.db.data.users[m.sen
         }
 
 //if (m.isBaileys) return 
-if (m.isBaileys || isBaileysFail && m?.sender === this?.this?.user?.jid) {
+if (m.isBaileys && m?.sender === this?.this?.user?.jid) {
       return;
 }
 
