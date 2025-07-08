@@ -122,6 +122,8 @@ const connectionOptions = {
   version: version
 }
 
+const authFile = './sessions'; 
+
 global.conn = makeWASocket(connectionOptions)
 
 if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
