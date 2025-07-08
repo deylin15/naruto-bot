@@ -124,27 +124,43 @@ const connectionOptions = {
 
 global.conn = makeWASocket(connectionOptions)
 
-if (!fs.existsSync(`./${sessions}/creds.json`)) {
-  if (opcion === '2' || methodCode) {
-    opcion = '2'
-    if (!conn.authState.creds.registered) {
-  let numero
-  if (phoneNumber) {
-    numero = phoneNumber.replace(/[^0-9]/g, '')
-  } else {
-    do {
-      numero = await question(chalk.green(' 🔥 Ingrese su número de WhatsApp:\nEjemplo: 57300xxxxxxx\n--> '))
-      numero = numero.replace(/[^0-9]/g, '')
-    } while (!/^\d+$/.test(numero) || !/^(504|57|51|52|1|34|55|591|598|56)/.test(numero))
-  }
-  rl.close() 
-      
+if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
+  opcion = '2'
 
-      setTimeout(async () => {
-        let code = await conn.requestPairingCode(numero)
-        code = code?.match(/.{1,4}/g)?.join('-') || code
-        console.log(chalk.white.bold.bgMagenta(`💥 CÓDIGO DE EMPAREJAMIENTO DE NARUTO-BOT ✨\n\n🔗 Chakra Code: ${code}\n`))
-      }, 3000)
+  if (!conn.authState.creds.registered) {
+    let addNumber
+
+    if (!!phoneNumber) {
+      addNumber = phoneNumber.replace(/[^0-9]/g, '')
+    } else {
+      do {
+        phoneNumber = await question(chalk.bgBlack(chalk.bold.green('📲 INGRESA TU NÚMERO DE WHATSAPP (sin +): ')))
+        phoneNumber = phoneNumber.replace(/[^0-9]/g, '')
+      } while (!phoneNumber || !/^[0-9]{8,15}$/.test(phoneNumber))
+      addNumber = phoneNumber
+    }
+
+    console.log(chalk.bold.green('\n⌛ SOLICITANDO CÓDIGO DE EMPAREJAMIENTO...\n'))
+
+    try {
+      let codeBot = await conn.requestPairingCode(addNumber)
+      codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
+
+      console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN:`)),
+        chalk.bold.white(chalk.white(codeBot)))
+      console.log(chalk.bold.yellow('\n⏳ TIENES 2 MINUTOS PARA VINCULAR TU CUENTA\n'))
+
+      // Tiempo máximo de vinculación (2 minutos)
+      const tiempoExpira = setTimeout(async () => {
+        if (!conn.user) {
+          console.log(chalk.redBright('\n⚠️ CÓDIGO DE EMPAREJAMIENTO EXPIRADO. SESIÓN NO VINCULADA A TIEMPO.'))
+          // Guardar la sesión aunque no se haya vinculado
+          await saveState()
+        }
+      }, 120000) // 2 minutos
+
+    } catch (err) {
+      console.error(chalk.redBright('❌ ERROR AL GENERAR EL CÓDIGO DE EMPAREJAMIENTO:'), err)
     }
   }
 }
