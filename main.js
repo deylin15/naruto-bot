@@ -462,3 +462,5 @@ _quickTest().then(() => conn.logger.info(chalk.bold(`🍬  H E C H O\n`.trim()))
 async function joinChannels(conn) {
 for (const channelId of Object.values(global.ch)) {
 await conn.newsletterFollow(channelId).catch(() => {})
+   }
+ }
