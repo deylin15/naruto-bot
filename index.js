@@ -190,9 +190,7 @@ console.log(chalk.bold.white(chalk.bgMagenta(`✧ CÓDIGO DE VINCULACIÓN ✧`))
 
 conn.isInit = false;
 conn.well = false;
-//conn.logger.info(`
-╭─────────╮
-╰ H E C H O ╯\n`)
+//conn.logger.info(`╭─────────╮\n╰ H E C H O ╯\n`)
 
 if (!opts['test']) {
 if (global.db) setInterval(async () => {
