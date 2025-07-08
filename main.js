@@ -176,7 +176,7 @@ if (!!phoneNumber) {
 addNumber = phoneNumber.replace(/[^0-9]/g, '')
 } else {
 do {
-phoneNumber = await question(chalk.bgBlack(chalk.bold.greenBright("\n\n✳️ Escriba su número\n\nEjemplo: 5491168xxxx\n\n\n\n")))
+phoneNumber = await question(chalk.bgBlack(chalk.bold.greenBright("\n┏━━━━━━━━━━━━━━━━━⌬\n┃Escriba su número\n┃\n┃Ejemplo: 5491168xxxx\n┃\n┗━━━━━━━━━━━━━━━━━━━⌬")))
 phoneNumber = phoneNumber.replace(/\D/g,'')
 if (!phoneNumber.startsWith('+')) {
 phoneNumber = `+${phoneNumber}`
@@ -221,7 +221,7 @@ return false
 
 setInterval(async () => {
 await clearTmp()
-console.log(chalk.cyan(`┏━━━━━━⪻♻️ AUTO-CLEAR 🗑️⪼━━━━━━•\n┃→ ARCHIVOS DE LA CARPETA TMP ELIMINADAS\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━•`))
+console.log(chalk.cyan(`┏━━━━━━⌬ ♻ AUTO-CLEAR ↻⌬━━━━━━•\n┃→ ARCHIVOS DE LA CARPETA TMP ELIMINADAS\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━⌬`))
 }, 60000) //1 munto
 
 function purgeSession() {
@@ -238,16 +238,16 @@ unlinkSync(`./BotSession/${files}`)
 
 function purgeSessionSB() {
 try {
-let listaDirectorios = readdirSync('./Alya-SubBots/');
+let listaDirectorios = readdirSync('./SubBots/');
 let SBprekey = []
 listaDirectorios.forEach(directorio => {
-if (statSync(`./Alya-SubBots/${directorio}`).isDirectory()) {
-let DSBPreKeys = readdirSync(`./Alya-SubBots/${directorio}`).filter(fileInDir => {
+if (statSync(`./SubBots/${directorio}`).isDirectory()) {
+let DSBPreKeys = readdirSync(`./SubBots/${directorio}`).filter(fileInDir => {
 return fileInDir.startsWith('pre-key-') /*|| fileInDir.startsWith('app-') || fileInDir.startsWith('session-')*/
 })
 SBprekey = [...SBprekey, ...DSBPreKeys]
 DSBPreKeys.forEach(fileInDir => {
-unlinkSync(`./Alya-SubBots/${directorio}/${fileInDir}`)
+unlinkSync(`./SubBots/${directorio}/${fileInDir}`)
 })
 }
 })
@@ -257,7 +257,7 @@ console.log(chalk.bold.red(`[ ℹ️ ] Algo salio mal durante la eliminación, a
 }}
 
 function purgeOldFiles() {
-const directories = ['./BotSession/', './Alya-SubBots/']
+const directories = ['./BotSession/', './SubBots/']
 const oneHourAgo = Date.now() - (60 * 60 * 1000)
 directories.forEach(dir => {
 readdirSync(dir, (err, files) => {
@@ -280,9 +280,9 @@ setInterval(async () => {
 if (stopped === 'close' || !conn || !conn.user) return
 await purgeSessionSB()
 await purgeSession()
-console.log(chalk.bold.cyanBright(`\n╭» 🔵 ${global.authFile} 🔵\n│→ SESIONES NO ESENCIALES ELIMINADAS\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))
+console.log(chalk.bold.cyanBright(`\n╭━━━⌬  ${global.authFile} \n│→ SESIONES NO ESENCIALES ELIMINADAS\n╰━━━━━━━━━━━━━━━━━━━━━━━━━⌬`))
 await purgeOldFiles()
-console.log(chalk.bold.cyanBright(`\n╭» 🟠 ARCHIVOS 🟠\n│→ ARCHIVOS RESIDUALES ELIMINADAS\n╰― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― ― 🗑️♻️`))}, 1000 * 60 * 10)
+console.log(chalk.bold.cyanBright(`\n╭━━━⌬  ARCHIVOS \n│→ ARCHIVOS RESIDUALES ELIMINADAS\n╰━━━━━━━━━━━━━━━━━━━━━━━━━⌬`))}, 1000 * 60 * 10)
 
 async function connectionUpdate(update) {
 const {connection, lastDisconnect, isNewLogin} = update;
@@ -300,11 +300,11 @@ if (opcion == '1' || methodCodeQR) {
 console.log(chalk.cyan('✅ ESCANEA EL CÓDIGO QR EXPIRA EN 45 SEGUNDOS ✅.'))
 }}
 if (connection == 'open') {
-console.log(chalk.bold.greenBright('\n▣─────────────────────────────···\n│\n│❧ 𝙲𝙾𝙽𝙴𝙲𝚃𝙰𝙳𝙾 𝙲𝙾𝚁𝚁𝙴𝙲𝚃𝙰𝙼𝙴𝙽𝚃𝙴 𝙰𝙻 𝚆𝙷𝙰𝚃𝚂𝙰𝙿𝙿 ✅\n│\n▣─────────────────────────────···'))
+console.log(chalk.bold.greenBright('\n▣─────────────────────────────···\n│\n│⌬ 𝙲𝙾𝙽𝙴𝙲𝚃𝙰𝙳𝙾 𝙲𝙾𝚁𝚁𝙴𝙲𝚃𝙰𝙼𝙴𝙽𝚃𝙴 𝙰𝙻 𝚆𝙷𝙰𝚃𝚂𝙰𝙿𝙿 ✅\n│\n▣─────────────────────────────···'))
 }
 let reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
 if (reason == 405) {
-await fs.unlinkSync("./Alya-BotSession/" + "creds.json")
+await fs.unlinkSync("./BotSession/" + "creds.json")
 console.log(chalk.bold.redBright(`[ ⚠ ] Conexión replazada, Por favor espere un momento me voy a reiniciar...\nSi aparecen error vuelve a iniciar con : npm start`)) 
 process.send('reset')}
 if (connection === 'close') {
