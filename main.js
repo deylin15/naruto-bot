@@ -226,7 +226,7 @@ console.log(chalk.cyan(`┏━━━━━━⪻♻️ AUTO-CLEAR 🗑️⪼━�
 
 function purgeSession() {
 let prekey = []
-let directorio = readdirSync("./Alya-SubBots")
+let directorio = readdirSync("./SubBots")
 let filesFolderPreKeys = directorio.filter(file => {
 return file.startsWith('pre-key-') /*|| file.startsWith('session-') || file.startsWith('sender-') || file.startsWith('app-') */
 })
