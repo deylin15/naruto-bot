@@ -456,3 +456,16 @@ for (const channelId of Object.values(global.ch)) {
 await conn.newsletterFollow(channelId).catch(() => {})
    }
  }
+async function isValidPhoneNumber(number) {
+try {
+number = number.replace(/\s+/g, '')
+if (number.startsWith('+521')) {
+number = number.replace('+521', '+52');
+} else if (number.startsWith('+52') && number[4] === '1') {
+number = number.replace('+52 1', '+52');
+}
+const parsedNumber = phoneUtil.parseAndKeepRawInput(number)
+return phoneUtil.isValidNumber(parsedNumber)
+} catch (error) {
+return false
+}}
