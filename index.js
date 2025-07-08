@@ -127,8 +127,7 @@ opcion = '1'
 }
 if (!methodCodeQR && !methodCode && !fs.existsSync(`./${sessions}/creds.json`)) {
 do {
-opcion = await question(colores('
-┏━━━━━━━━━━━━━━━━━━⌬\n
+opcion = await question(colores('\n┏━━━━━━━━━━━━━━━━━━⌬\n
 ┃Seleccione una opción:\n┣━━━━━━━━━━━━━━━━━━⌬\n┃1. Con código QR\n┃2. Con código de texto de 8 dígitos\n┗━━━━━━━━━━━━━━━━━━⌬\n--> '))
 
 if (!/^[1-2]$/.test(opcion)) {
