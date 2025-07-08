@@ -122,12 +122,16 @@ const connectionOptions = {
   version: version
 }
 
-const authFile = './sessions'; 
-
 global.conn = makeWASocket(connectionOptions)
-conn.ev.on('connection.update', connectionUpdate)
+
+
+let handler = await import('./handler.js')
+
 conn.ev.on('messages.upsert', handler.default)
-conn.ev.on('creds.update', saveCreds) // Muy importante
+conn.ev.on('connection.update', connectionUpdate)
+conn.ev.on('creds.update', saveCreds)
+
+const authFile = './sessions'
 
 if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
   opcion = '2'
@@ -152,7 +156,7 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
       codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
 
       console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN:`)),
-        chalk.bold.white(chalk.white(codeBot)))
+        chalk.bold.white(codeBot))
       console.log(chalk.bold.yellow('\n⏳ TIENES 2 MINUTOS PARA VINCULAR TU CUENTA\n'))
 
       const timeout = setTimeout(async () => {
@@ -162,7 +166,7 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
         }
       }, 120000)
 
-      // Esperar a que se vincule
+      // Cancelar timeout si se vincula
       conn.ev.on('connection.update', async ({ connection }) => {
         if (connection === 'open') {
           clearTimeout(timeout)
@@ -222,27 +226,29 @@ async function connectionUpdate(update) {
   }
 
 
-let handler = await import('./handler.js')
-global.reloadHandler = async function(restatConn) {
-try {
-const Handler = await import(`./handler.js?update=${Date.now()}`).catch(console.error);
-if (Object.keys(Handler || {}).length) handler = Handler
-} catch (e) {
-console.error(e);
-}
-if (restatConn) {
-const oldChats = global.conn.chats
-try {
-global.conn.ws.close()
-} catch { }
-conn.ev.removeAllListeners()
-global.conn = makeWASocket(connectionOptions, {chats: oldChats})
-isInit = true
-}
-if (!isInit) {
-conn.ev.off('messages.upsert', conn.handler)
-conn.ev.off('connection.update', conn.connectionUpdate)
-conn.ev.off('creds.update', conn.credsUpdate)
+global.reloadHandler = async function (restartConn) {
+  try {
+    const Handler = await import(`./handler.js?update=${Date.now()}`)
+    if (Handler && typeof Handler.default === 'function') {
+      handler = Handler
+    } else {
+      console.error('❌ handler.js no exporta una función válida.')
+      return
+    }
+  } catch (e) {
+    console.error('❌ Error al recargar handler.js:', e)
+  }
+
+  if (restartConn) {
+    const oldChats = global.conn.chats
+    try { global.conn.ws.close() } catch { }
+    global.conn.ev.removeAllListeners()
+    global.conn = makeWASocket(connectionOptions, { chats: oldChats })
+
+    conn.ev.on('messages.upsert', handler.default)
+    conn.ev.on('connection.update', connectionUpdate)
+    conn.ev.on('creds.update', saveCreds)
+  }
 }
 await global.reloadHandler()
 
