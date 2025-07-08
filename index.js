@@ -427,7 +427,7 @@ if (typeof message === 'string' && filterStrings.some(filterString => message.in
 arguments[0] = ""
 }
 originalConsoleMethod.apply(console, arguments)
-}}
+}
 
 setInterval(async () => {
 if (stopped === 'close' || !conn || !conn.user) return
