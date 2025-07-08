@@ -82,7 +82,7 @@ let _user = global.db.data && global.db.data.users && global.db.data.users[m.sen
         const isROwner = [
   conn.decodeJid(global.conn.user.id),
   ...global.owner.map(([n]) => n),
-  ...global.lidOwners.map(([n]) => n)
+ ...(Array.isArray(global.lidOwners) ? global.lidOwners.map(([n]) => n) : [])
 ]
   .map(v => v.replace(/[^0-9]/g, ''))
   .some(n => [`${n}@s.whatsapp.net`, `${n}@lid`].includes(m.sender))
