@@ -127,8 +127,13 @@ opcion = '1'
 }
 if (!methodCodeQR && !methodCode && !fs.existsSync(`./${sessions}/creds.json`)) {
 do {
-opcion = await question(colores('\n┏━━━━━━━━━━━━━━━━━━⌬\n
-┃Seleccione una opción:\n┣━━━━━━━━━━━━━━━━━━⌬\n┃1. Con código QR\n┃2. Con código de texto de 8 dígitos\n┗━━━━━━━━━━━━━━━━━━⌬\n--> '))
+opcion = await question(colores(`\n┏━━━━━━━━━━━━━━━━━━⌬
+┃Seleccione una opción:
+┣━━━━━━━━━━━━━━━━━━⌬
+┃1. Con código QR
+┃2. Con código de texto de 8 dígitos
+┗━━━━━━━━━━━━━━━━━━⌬
+--> `))
 
 if (!/^[1-2]$/.test(opcion)) {
 console.log(chalk.bold.redBright(`➙  No se permiten numeros que no sean 1 o 2, tampoco letras o símbolos especiales.`))
