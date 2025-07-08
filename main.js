@@ -152,14 +152,12 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
         chalk.bold.white(chalk.white(codeBot)))
       console.log(chalk.bold.yellow('\n⏳ TIENES 2 MINUTOS PARA VINCULAR TU CUENTA\n'))
 
-      // Tiempo máximo de vinculación (2 minutos)
-      const tiempoExpira = setTimeout(async () => {
-        if (!conn.user) {
-          console.log(chalk.redBright('\n⚠️ CÓDIGO DE EMPAREJAMIENTO EXPIRADO. SESIÓN NO VINCULADA A TIEMPO.'))
-          // Guardar la sesión aunque no se haya vinculado
-          await saveState()
-        }
-      }, 120000) // 2 minutos
+      setTimeout(async () => {
+  if (!conn.user) {
+    console.log(chalk.redBright('\n⚠️ CÓDIGO DE EMPAREJAMIENTO EXPIRADO. SESIÓN NO VINCULADA A TIEMPO.'))
+    await saveState()
+  }
+}, 120000)
 
     } catch (err) {
       console.error(chalk.redBright('❌ ERROR AL GENERAR EL CÓDIGO DE EMPAREJAMIENTO:'), err)
@@ -200,12 +198,14 @@ async function connectionUpdate(update) {
   }
 
   if (connection === 'open') {
-    console.log(boxen(chalk.bold('✅ NARUTO-BOT CONECTADO'), {
-      borderStyle: 'round',
-      borderColor: 'green',
-      title: chalk.green('💥 CONEXIÓN EXITOSA 💥'),
-      titleAlignment: 'center'
-    }))
+  console.log(boxen(chalk.bold('✅ NARUTO-BOT CONECTADO'), {
+    borderStyle: 'round',
+    borderColor: 'green',
+    title: chalk.green('💥 CONEXIÓN EXITOSA 💥'),
+    titleAlignment: 'center'
+  }))
+  rl.close() // ⬅️ Esto cierra el readline
+}
     if (typeof joinChannels === 'function') await joinChannels(conn)
   }
 }
