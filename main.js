@@ -125,6 +125,9 @@ const connectionOptions = {
 const authFile = './sessions'; 
 
 global.conn = makeWASocket(connectionOptions)
+conn.ev.on('connection.update', connectionUpdate)
+conn.ev.on('messages.upsert', handler.default)
+conn.ev.on('creds.update', saveCreds) // Muy importante
 
 if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)) {
   opcion = '2'
@@ -152,12 +155,21 @@ if (!fs.existsSync(`./${authFile}/creds.json`) && (opcion === '2' || methodCode)
         chalk.bold.white(chalk.white(codeBot)))
       console.log(chalk.bold.yellow('\n⏳ TIENES 2 MINUTOS PARA VINCULAR TU CUENTA\n'))
 
-      setTimeout(async () => {
-  if (!conn.user) {
-    console.log(chalk.redBright('\n⚠️ CÓDIGO DE EMPAREJAMIENTO EXPIRADO. SESIÓN NO VINCULADA A TIEMPO.'))
-    await saveState()
-  }
-}, 120000)
+      const timeout = setTimeout(async () => {
+        if (!conn.user) {
+          console.log(chalk.redBright('\n⚠️ CÓDIGO DE EMPAREJAMIENTO EXPIRADO. SESIÓN NO VINCULADA.'))
+          await saveCreds()
+        }
+      }, 120000)
+
+      // Esperar a que se vincule
+      conn.ev.on('connection.update', async ({ connection }) => {
+        if (connection === 'open') {
+          clearTimeout(timeout)
+          console.log(chalk.green('\n✅ ¡VINCULACIÓN EXITOSA!'))
+          await saveCreds()
+        }
+      })
 
     } catch (err) {
       console.error(chalk.redBright('❌ ERROR AL GENERAR EL CÓDIGO DE EMPAREJAMIENTO:'), err)
