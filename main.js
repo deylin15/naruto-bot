@@ -318,4 +318,3 @@ async function joinChannels(conn) {
     await conn.newsletterFollow(channelId).catch(() => {})
   }
  }
-}
