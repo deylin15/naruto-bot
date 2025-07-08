@@ -208,7 +208,7 @@ async function connectionUpdate(update) {
 }
     if (typeof joinChannels === 'function') await joinChannels(conn)
   }
-}
+
 
 let handler = await import('./handler.js')
 global.reloadHandler = async function(restatConn) {
