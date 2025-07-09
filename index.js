@@ -41,9 +41,9 @@ let { say } = cfonts
 console.log(chalk.bold.redBright(`\n Iniciando Naruto-bot ⑇⑇⑇⑇⑇⑇⑇⑇⑇⑇⑇⑇\n`))
 
 say('Naruto', {
-font: 'block',
-align: 'center',
-colors: ['magentaBright']
+  font: 'block',
+  align: 'center',
+  colors: ['yellowBright', 'redBright', 'orange', 'yellow']
 })
 
 say(`Developed By ° Deylin`, {
