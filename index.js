@@ -43,7 +43,7 @@ console.log(chalk.bold.redBright(`\n Iniciando Naruto-bot ⑇⑇⑇⑇⑇⑇⑇�
 say('Naruto', {
   font: 'block',
   align: 'center',
-  colors: ['yellowBright', 'redBright', 'orange', 'yellow']
+  colors: ['yellowBright', 'redBright', 'yellow']
 })
 
 say(`Developed By ° Deylin`, {
