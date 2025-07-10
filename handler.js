@@ -371,6 +371,11 @@ let chat = global.db.data.chats[m.chat]
 let user = global.db.data.users[m.sender]
 if (!['grupo-unbanchat.js'].includes(name) && chat && chat.isBanned && !isROwner) return
 if (name != 'grupo-unbanchat.js' && name != 'owner-exec.js' && name != 'owner-exec2.js' && name != 'grupo-delete.js' && chat?.isBanned && !isROwner) return
+if (m.text && user.banned && !isROwner) {
+m.reply(`《✦》Estas baneado/a, no puedes usar comandos en este bot!\n\n${user.bannedReason ? `✰ *Motivo:* ${user.bannedReason}` : '✰ *Motivo:* Sin Especificar'}\n\n> ✧ Si este Bot es cuenta oficial y tiene evidencia que respalde que este mensaje es un error, puedes exponer tu caso con un moderador.`)
+user.antispam++
+return
+}
 
 if (user.antispam2 && isROwner) return
 let time = global.db.data.users[m.sender].spam + 3000
@@ -424,12 +429,24 @@ if (plugin.private && m.isGroup) {
 fail('private', m, this)
 continue
 }
+if (plugin.register == true && _user.registered == false) { 
+fail('unreg', m, this)
+continue
+}
 m.isCommand = true
 let xp = 'exp' in plugin ? parseInt(plugin.exp) : 17 
 if (xp > 200)
 m.reply('chirrido -_-')
 else
 m.exp += xp
+if (!isPrems && plugin.coin && global.db.data.users[m.sender].coin < plugin.coin * 1) {
+conn.reply(m.chat, `❮✦❯ Se agotaron tus ${moneda}`, m)
+continue
+}
+if (plugin.level > _user.level) {
+conn.reply(m.chat, `❮✦❯ Se requiere el nivel: *${plugin.level}*\n\n• Tu nivel actual es: *${_user.level}*\n\n• Usa este comando para subir de nivel:\n*${usedPrefix}levelup*`, m)       
+continue
+}
 let extra = {
 match,
 usedPrefix,
@@ -474,6 +491,7 @@ await plugin.after.call(this, m, extra)
 console.error(e)
 }}
 if (m.coin)
+conn.reply(m.chat, `❮✦❯ Utilizaste ${+m.coin} ${moneda}`, m)
 }
 break
 }}
@@ -540,6 +558,10 @@ function pickRandom(list) { return list[Math.floor(Math.random() * list.length)]
 
 global.dfail = (type, m, conn) => {
 
+  let edadaleatoria = ['10', '28', '20', '40', '18', '21', '15', '11', '9', '17', '25'].getRandom();
+  let user2 = m.pushName || 'Anónimo';
+  let verifyaleatorio = ['registrar', 'reg', 'verificar', 'verify', 'register'].getRandom();
+
   const msg = {
   rowner: `*〘 ${comando} 〙 es una función exclusiva de los propietarios principales. Tu acceso no está autorizado.*`,
   owner: `*〘 ${comando} 〙 solo puede ser ejecutado por los desarrolladores. No tienes los permisos necesarios.*`,
@@ -549,10 +571,11 @@ global.dfail = (type, m, conn) => {
   private: `*〘 ${comando} 〙 debe utilizarse en un chat privado. Intenta de nuevo en el canal adecuado.*`,
   admin: `*〘 ${comando} 〙 requiere permisos de administrador. Acceso denegado.*`,
   botAdmin: `*Para ejecutar 〘 ${comando} 〙, el bot necesita ser administrador. Por favor, actualiza los permisos.*`,
+  unreg: `*Para usar 〘 ${comando} 〙 primero debes registrarte.*\n\n*Utiliza:* _#${verifyaleatorio} ${user2}.${edadaleatoria}_`,
   restrict: `*Esta función está desactivada. No se permiten excepciones.*`
 }[type];
 
-  if (msg) return conn.reply(m.chat, msg, m).then(_ => m.react('✖️'));}
+  if (msg) return conn.reply(m.chat, msg, m, rcanal).then(_ => m.react('✖️'));}
 
 let file = global.__filename(import.meta.url, true)
 watchFile(file, async () => {
