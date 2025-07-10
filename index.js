@@ -1,18 +1,5 @@
-// ✅ Manejo global de errores críticos
-process.on('uncaughtException', (err) => {
-  console.error('\n❌ Uncaught Exception:\n', err.stack || err)
-})
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('\n❌ Unhandled Rejection:\n', reason.stack || reason)
-})
-
-process.on('warning', (warning) => {
-  console.warn('\n⚠️ Warning:\n', warning.stack || warning)
-})
-
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1'
-import './config.js'
+import './settings.js'
 import { setupMaster, fork } from 'cluster'
 import { watchFile, unwatchFile } from 'fs'
 import cfonts from 'cfonts'
@@ -24,6 +11,7 @@ import fs, {readdirSync, statSync, unlinkSync, existsSync, mkdirSync, readFileSy
 import yargs from 'yargs';
 import {spawn} from 'child_process'
 import lodash from 'lodash'
+import { yukiJadiBot } from './plugins/jadibot-serbot.js'
 import chalk from 'chalk'
 import syntaxerror from 'syntax-error'
 import {tmpdir} from 'os'
@@ -51,15 +39,15 @@ const PORT = process.env.PORT || process.env.SERVER_PORT || 3000
 
 let { say } = cfonts
 
-console.log(chalk.bold.redBright(`\n Iniciando Naruto-bot ⑇⑇⑇⑇⑇⑇⑇⑇⑇⑇⑇⑇\n`))
+console.log(chalk.bold.redBright(`\n✰ Iniciando Yuki-Suou-Bot ✰\n`))
 
-say('Naruto', {
-  font: 'block',
-  align: 'center',
-  colors: ['yellowBright', 'redBright', 'yellow']
+say('YukiBot-MD', {
+font: 'block',
+align: 'center',
+colors: ['magentaBright']
 })
 
-say(`Developed By ° Deylin`, {
+say(`Developed By • The-King-Destroy`, {
 font: 'console',
 align: 'center',
 colors: ['blueBright']
@@ -134,10 +122,10 @@ opcion = '1'
 }
 if (!methodCodeQR && !methodCode && !fs.existsSync(`./${sessions}/creds.json`)) {
 do {
-opcion = await question(colores('┏━━━━━━━━━━━━━━━━━━━━⌬\n┃ Seleccione una opción:\n┗━━━━━━━━━━━━━━━━━━━⌬\n') + opcionQR('┏━━━━━━━━━━━━━━━⍰\n┃1. Con código QR\n') + opcionTexto('┃2. Con código de texto de 8 dígitos\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━⍰\n--> '))
+opcion = await question(colores('⌨ Seleccione una opción:\n') + opcionQR('1. Con código QR\n') + opcionTexto('2. Con código de texto de 8 dígitos\n--> '))
 
 if (!/^[1-2]$/.test(opcion)) {
-console.log(chalk.bold.redBright(` No se permiten numeros que no sean 1 o 2, tampoco letras o símbolos especiales.`))
+console.log(chalk.bold.redBright(`✦ No se permiten numeros que no sean 1 o 2, tampoco letras o símbolos especiales.`))
 }} while (opcion !== '1' && opcion !== '2' || fs.existsSync(`./${sessions}/creds.json`))
 } 
 
@@ -290,6 +278,31 @@ conn.ev.on('creds.update', conn.credsUpdate)
 isInit = false
 return true
 };
+
+//Arranque nativo para subbots by - ReyEndymion >> https://github.com/ReyEndymion
+
+global.rutaJadiBot = join(__dirname, './JadiBots')
+
+if (global.yukiJadibts) {
+if (!existsSync(global.rutaJadiBot)) {
+mkdirSync(global.rutaJadiBot, { recursive: true }) 
+console.log(chalk.bold.cyan(`La carpeta: ${jadi} se creó correctamente.`))
+} else {
+console.log(chalk.bold.cyan(`La carpeta: ${jadi} ya está creada.`)) 
+}
+
+const readRutaJadiBot = readdirSync(rutaJadiBot)
+if (readRutaJadiBot.length > 0) {
+const creds = 'creds.json'
+for (const gjbts of readRutaJadiBot) {
+const botPath = join(rutaJadiBot, gjbts)
+const readBotPath = readdirSync(botPath)
+if (readBotPath.includes(creds)) {
+yukiJadiBot({pathYukiJadiBot: botPath, m: null, conn, args: '', usedPrefix: '/', command: 'serbot'})
+}
+}
+}
+}
 
 const pluginFolder = global.__dirname(join(__dirname, './plugins/index'))
 const pluginFilter = (filename) => /\.js$/.test(filename)
