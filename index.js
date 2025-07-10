@@ -186,7 +186,6 @@ setTimeout(async () => {
   )
 }, 3000)
 }}}
-}
 
 conn.isInit = false;
 conn.well = false;
