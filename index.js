@@ -1,6 +1,5 @@
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1'
 import './config.js'
-//import { iniciarMemeAutomatico } from './plugins/_prueba.js';
 import { setupMaster, fork } from 'cluster'
 import { watchFile, unwatchFile } from 'fs'
 import cfonts from 'cfonts'
@@ -12,6 +11,7 @@ import fs, {readdirSync, statSync, unlinkSync, existsSync, mkdirSync, readFileSy
 import yargs from 'yargs';
 import {spawn} from 'child_process'
 import lodash from 'lodash'
+import { kiritoJadiBot } from './plugins/jadibot-serbot.js';
 import chalk from 'chalk'
 import syntaxerror from 'syntax-error'
 import {tmpdir} from 'os'
@@ -41,15 +41,15 @@ const PORT = process.env.PORT || process.env.SERVER_PORT || 3000
 //let require = createRequire(megu)
 let { say } = cfonts
 
-console.log(chalk.bold.redBright(`\n🧃 Iniciando Pikachu-bot ⚡\n`))
+console.log(chalk.bold.redBright(`\n≪━─━─━─━─◈─━─━─━─━≫\n ✈ Iniciando kirito-bot-MD ʕ•ᴥ•ʔ\n ≪━─━─━─━─◈─━─━─━─━≫\n`))
 
-say('Pikachu Bot 🧃', {
+say('kirito-bot-MD ⚡', {
 font: 'block',
 align: 'center',
 colors: ['magentaBright']
 })
 
-say(`Developed By • Deylin`, {
+say(`Developed By Deylin 👑`, {
 font: 'console',
 align: 'center',
 colors: ['blueBright']
@@ -73,7 +73,7 @@ global.timestamp = {start: new Date}
 const __dirname = global.__dirname(import.meta.url)
 
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse())
-global.prefix = new RegExp('^[#/!⚡.🧃]')
+global.prefix = new RegExp('^[#/!.]')
 // global.opts['db'] = process.env['db']
 
 global.db = new Low(/https?:\/\//.test(opts['db'] || '') ? new cloudDBAdapter(opts['db']) : new JSONFile('./src/database/database.json'))
@@ -125,10 +125,10 @@ opcion = '1'
 }
 if (!methodCodeQR && !methodCode && !fs.existsSync(`./${sessions}/creds.json`)) {
 do {
-opcion = await question(colores('🧃 Seleccione una opción:\n') + opcionQR('1. Con código QR\n') + opcionTexto('2. Con código de texto de 8 dígitos\n--> '))
+opcion = await question(colores('✎﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏\n Seleccione una opción:\n') + opcionQR('1. Con código QR\n') + opcionTexto('2. Con código de texto de 8 dígitos\n--> '))
 
 if (!/^[1-2]$/.test(opcion)) {
-console.log(chalk.bold.redBright(`⚡ No se permiten numeros que no sean 1 o 2, tampoco letras o símbolos especiales.`))
+console.log(chalk.bold.redBright(`✰ཽ No se permiten numeros que no sean 1 o 2, tampoco letras o símbolos especiales.`))
 }} while (opcion !== '1' && opcion !== '2' || fs.existsSync(`./${sessions}/creds.json`))
 } 
 
@@ -154,14 +154,10 @@ return msg?.message || ""
 msgRetryCounterCache,
 msgRetryCounterMap,
 defaultQueryTimeoutMs: undefined,
-version,
+version: [2, 3000, 1023223821],
 }
 
 global.conn = makeWASocket(connectionOptions);
-
-global.conn.sendAlbumMessage = function (jid, messages, quoted) {
-  return sendAlbumMessage(this, jid, messages, quoted)
-}
 
 if (!fs.existsSync(`./${sessions}/creds.json`)) {
 if (opcion === '2' || methodCode) {
@@ -172,7 +168,7 @@ if (!!phoneNumber) {
 addNumber = phoneNumber.replace(/[^0-9]/g, '')
 } else {
 do {
-phoneNumber = await question(chalk.bgBlack(chalk.bold.greenBright(`⚡ Por favor, Ingrese el número de WhatsApp.\n${chalk.bold.yellowBright(`🧃 Ejemplo: 57321×××××××`)}\n${chalk.bold.magentaBright('---> ')}`)))
+phoneNumber = await question(chalk.bgBlack(chalk.bold.greenBright(`✦ Por favor, Ingrese el número de WhatsApp.\n${chalk.bold.yellowBright(`✏  Ejemplo: 57321×××××××\n✎﹏﹏﹏﹏﹏﹏﹏﹏﹏﹏`)}\n${chalk.bold.magentaBright('---> ')}`)))
 phoneNumber = phoneNumber.replace(/\D/g,'')
 if (!phoneNumber.startsWith('+')) {
 phoneNumber = `+${phoneNumber}`
@@ -183,14 +179,14 @@ addNumber = phoneNumber.replace(/\D/g, '')
 setTimeout(async () => {
 let codeBot = await conn.requestPairingCode(addNumber)
 codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot
-console.log(chalk.bold.white(chalk.bgMagenta(`🧃 CÓDIGO DE VINCULACIÓN `)), chalk.bold.white(chalk.white(codeBot)))
+console.log(chalk.bold.white(chalk.bgMagenta(`✧ CÓDIGO DE VINCULACIÓN ✧`)), chalk.bold.white(chalk.white(codeBot)))
 }, 3000)
 }}}
 }
 
 conn.isInit = false;
 conn.well = false;
-//conn.logger.info(`🧃 H E C H O\n`)
+//conn.logger.info(`ʕ•ᴥ•ʔ  H E C H O ✈\n`)
 
 if (!opts['test']) {
 if (global.db) setInterval(async () => {
@@ -216,7 +212,7 @@ if (opcion == '1' || methodCodeQR) {
 console.log(chalk.bold.yellow(`\n❐ ESCANEA EL CÓDIGO QR EXPIRA EN 45 SEGUNDOS`))}
 }
 if (connection == 'open') {
-  console.log(chalk.bold.green('\n🧃 Pikachu-bot Conectada con éxito 🪽'))
+console.log(chalk.bold.green('\n⌬ kirito-bot-MD-✈ Conectada con éxito ↻'))
 }
 let reason = new Boom(lastDisconnect?.error)?.output?.statusCode
 if (connection === 'close') {
@@ -289,45 +285,29 @@ isInit = false
 return true
 };
 
-//Arranque nativo para subbots 
-
+//Arranque nativo para subbots by - ReyEndymion >> https://github.com/ReyEndymion
 
 global.rutaJadiBot = join(__dirname, './JadiBots')
 
-if (global.pikaJadibts) {
+if (global.kiritoJadibts) {
+if (!existsSync(global.rutaJadiBot)) {
+mkdirSync(global.rutaJadiBot, { recursive: true }) 
+console.log(chalk.bold.cyan(`La carpeta: ${jadi} se creó correctamente.`))
+} else {
+console.log(chalk.bold.cyan(`La carpeta: ${jadi} ya está creada.`)) 
+}
 
-
-  if (!existsSync(global.rutaJadiBot)) {
-    mkdirSync(global.rutaJadiBot, { recursive: true })
-    console.log(chalk.bold.cyan(`📁 Carpeta creada: ${global.rutaJadiBot}`))
-  } else {
-    console.log(chalk.bold.cyan(`📁 Carpeta ya existente: ${global.rutaJadiBot}`))
-  }
-
-  const subbots = readdirSync(global.rutaJadiBot, { withFileTypes: true })
-    .filter(dirent => dirent.isDirectory())
-    .map(dirent => dirent.name)
-
-  for (const nombreSubbot of subbots) {
-    const pathSubbot = join(global.rutaJadiBot, nombreSubbot)
-    const archivosSubbot = readdirSync(pathSubbot)
-
-    if (archivosSubbot.includes('creds.json')) {
-      try {
-        pikaJadiBot({
-          pathpikaJadiBot: pathSubbot,
-          m: null,
-          conn,
-          args: '',
-          usedPrefix: '/',
-          command: 'serbot'
-        })
-       // console.log(chalk.green(`✅ Subbot cargado: ${nombreSubbot}`))
-      } catch (e) {
-        // console.error(chalk.red(`❌ Error cargando subbot: ${nombreSubbot}`), e)
-      }
-    }
-  }
+const readRutaJadiBot = readdirSync(rutaJadiBot)
+if (readRutaJadiBot.length > 0) {
+const creds = 'creds.json'
+for (const gjbts of readRutaJadiBot) {
+const botPath = join(rutaJadiBot, gjbts)
+const readBotPath = readdirSync(botPath)
+if (readBotPath.includes(creds)) {
+kiritoJadiBot({pathkiritoJadiBot: botPath, m: null, conn, args: '', usedPrefix: '/', command: 'serbot'})
+}
+}
+}
 }
 
 const pluginFolder = global.__dirname(join(__dirname, './plugins/index'))
